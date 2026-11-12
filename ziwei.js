@@ -17,12 +17,51 @@ const BRANCH_GRID_AREA = {
   "亥": "4 / 4"
 };
 
+// Perimeter anchor points (0..100) on the 2x2 center panel for Sanfang dashed lines
+const BRANCH_ANCHOR = {
+  "巳": [0, 0],
+  "午": [25, 0],
+  "未": [75, 0],
+  "申": [100, 0],
+  "酉": [100, 25],
+  "戌": [100, 75],
+  "亥": [100, 100],
+  "子": [75, 100],
+  "丑": [25, 100],
+  "寅": [0, 100],
+  "卯": [0, 75],
+  "辰": [0, 25]
+};
+
+const MALEFIC_STARS = new Set(["擎羊", "陀羅", "火星", "鈴星", "地空", "地劫"]);
+
 const MUTAGEN_CLASS = {
   "祿": "mutagen--lu",
   "權": "mutagen--quan",
   "科": "mutagen--ke",
   "忌": "mutagen--ji"
 };
+
+const STEM_ELEMENT_CLASS = {
+  "甲": "el-wood", "乙": "el-wood",
+  "丙": "el-fire", "丁": "el-fire",
+  "戊": "el-earth", "己": "el-earth",
+  "庚": "el-metal", "辛": "el-metal",
+  "壬": "el-water", "癸": "el-water"
+};
+
+const BRANCH_ELEMENT_CLASS = {
+  "寅": "el-wood", "卯": "el-wood",
+  "巳": "el-fire", "午": "el-fire",
+  "辰": "el-earth", "戌": "el-earth", "丑": "el-earth", "未": "el-earth",
+  "申": "el-metal", "酉": "el-metal",
+  "亥": "el-water", "子": "el-water"
+};
+
+function shortPalaceName(name) {
+  if (name === "命宮") return "命宮";
+  return name.endsWith("宮") ? name.slice(0, -1) : name;
+}
 
 export function initZiwei(showToast) {
   const form = document.getElementById("ziweiForm");
@@ -37,6 +76,7 @@ export function initZiwei(showToast) {
   const timeSelect = document.getElementById("zwTimeIndex");
   const leapWrap = document.getElementById("zwLeapWrap");
   const leapCheckbox = document.getElementById("zwLeapMonth");
+  const downloadButton = document.getElementById("zwDownloadButton");
   const copyButton = document.getElementById("zwCopyButton");
   const errorEl = document.getElementById("zwError");
   const chartStage = document.getElementById("zwChartStage");
@@ -48,7 +88,6 @@ export function initZiwei(showToast) {
   let currentChart = null;
   let currentMeta = null;
 
-  // Populate Month & Day selects
   for (let m = 1; m <= 12; m++) {
     const opt = document.createElement("option");
     opt.value = String(m);
@@ -90,29 +129,70 @@ export function initZiwei(showToast) {
     });
   });
 
-  function createStarBadge(star, kind) {
-    const item = document.createElement("span");
-    item.className = `zw-star zw-star--${kind}`;
-
-    const nameSpan = document.createElement("span");
-    nameSpan.textContent = star.name;
-    item.appendChild(nameSpan);
-
-    if (star.brightness) {
-      const brightSpan = document.createElement("span");
-      brightSpan.className = "zw-brightness";
-      brightSpan.textContent = star.brightness;
-      item.appendChild(brightSpan);
+  function createStarColumn(star, category) {
+    const col = document.createElement("div");
+    let toneClass = category;
+    if (category === "minor" && MALEFIC_STARS.has(star.name)) {
+      toneClass = "malefic";
     }
+    col.className = `zw-star-col zw-star-col--${toneClass}`;
+
+    const nameEl = document.createElement("span");
+    nameEl.className = "zw-star-vert";
+    for (const ch of star.name) {
+      const cSpan = document.createElement("span");
+      cSpan.textContent = ch;
+      nameEl.appendChild(cSpan);
+    }
+    col.appendChild(nameEl);
+
+    const brightEl = document.createElement("span");
+    brightEl.className = "zw-star-bright";
+    brightEl.textContent = star.brightness || "\u00A0";
+    col.appendChild(brightEl);
 
     if (star.mutagen) {
-      const mutSpan = document.createElement("span");
-      mutSpan.className = `zw-mutagen ${MUTAGEN_CLASS[star.mutagen] || ""}`;
-      mutSpan.textContent = star.mutagen;
-      item.appendChild(mutSpan);
+      const mutEl = document.createElement("span");
+      mutEl.className = `zw-mutagen-box ${MUTAGEN_CLASS[star.mutagen] || ""}`;
+      mutEl.textContent = star.mutagen;
+      col.appendChild(mutEl);
     }
 
-    return item;
+    return col;
+  }
+
+  function drawSanfangLines(selectedBranch) {
+    const svg = astrolabeEl.querySelector(".zw-sanfang-svg");
+    if (!svg) return;
+    svg.replaceChildren();
+
+    const idx = BRANCH_ORDER.indexOf(selectedBranch);
+    if (idx === -1) return;
+
+    const p0 = BRANCH_ANCHOR[selectedBranch];
+    const opp = BRANCH_ANCHOR[BRANCH_ORDER[(idx + 6) % 12]];
+    const tri1 = BRANCH_ANCHOR[BRANCH_ORDER[(idx + 4) % 12]];
+    const tri2 = BRANCH_ANCHOR[BRANCH_ORDER[(idx + 8) % 12]];
+
+    const ns = "http://www.w3.org/2000/svg";
+    const segments = [
+      [p0, opp],
+      [p0, tri1],
+      [p0, tri2],
+      [tri1, tri2]
+    ];
+
+    segments.forEach(([a, b]) => {
+      const line = document.createElementNS(ns, "line");
+      line.setAttribute("x1", String(a[0]));
+      line.setAttribute("y1", String(a[1]));
+      line.setAttribute("x2", String(b[0]));
+      line.setAttribute("y2", String(b[1]));
+      line.setAttribute("stroke", "rgba(255, 255, 255, 0.36)");
+      line.setAttribute("stroke-width", "0.75");
+      line.setAttribute("stroke-dasharray", "2 2");
+      svg.appendChild(line);
+    });
   }
 
   function highlightSanfang(selectedBranch) {
@@ -121,9 +201,9 @@ export function initZiwei(showToast) {
 
     const relatedBranches = new Set([
       selectedBranch,
-      BRANCH_ORDER[(idx + 6) % 12], // 對宮
-      BRANCH_ORDER[(idx + 4) % 12], // 三合
-      BRANCH_ORDER[(idx + 8) % 12]  // 三合
+      BRANCH_ORDER[(idx + 6) % 12],
+      BRANCH_ORDER[(idx + 4) % 12],
+      BRANCH_ORDER[(idx + 8) % 12]
     ]);
 
     astrolabeEl.querySelectorAll(".zw-palace").forEach((el) => {
@@ -132,65 +212,120 @@ export function initZiwei(showToast) {
       el.classList.toggle("is-sanfang", branch !== selectedBranch && relatedBranches.has(branch));
     });
 
+    drawSanfangLines(selectedBranch);
+
     const centerFocus = astrolabeEl.querySelector(".zw-center-focus");
     if (centerFocus && currentChart) {
       const palace = currentChart.palaces.find((p) => p.earthlyBranch === selectedBranch);
       if (palace) {
         const majorText = palace.majorStars.length
-          ? palace.majorStars.map((s) => `${s.name}${s.brightness ? `(${s.brightness})` : ""}${s.mutagen ? `[化${s.mutagen}]` : ""}`).join("、")
-          : "無主星（借對宮星曜參看）";
+          ? palace.majorStars
+              .map((s) => `${s.name}${s.brightness ? `(${s.brightness})` : ""}${s.mutagen ? `[${s.mutagen}]` : ""}`)
+              .join("、")
+          : "空宮（借對宮星曜參看）";
         centerFocus.textContent = `【${palace.name} · ${palace.heavenlyStem}${palace.earthlyBranch}】主星：${majorText}`;
       }
     }
   }
 
+  function buildBaziPillars(chineseDateStr) {
+    const wrap = document.createElement("div");
+    wrap.className = "zw-bazi-box";
+
+    const label = document.createElement("div");
+    label.className = "zw-bazi-label";
+    label.textContent = "四柱八字";
+    wrap.appendChild(label);
+
+    const pillarsRow = document.createElement("div");
+    pillarsRow.className = "zw-bazi-pillars";
+    const titles = ["年柱", "月柱", "日柱", "時柱"];
+    const tokens = (chineseDateStr || "").trim().split(/\s+/);
+
+    tokens.slice(0, 4).forEach((gz, idx) => {
+      const col = document.createElement("div");
+      col.className = "zw-bazi-col";
+
+      const head = document.createElement("span");
+      head.className = "zw-bazi-head";
+      head.textContent = titles[idx] || "";
+
+      const stem = document.createElement("span");
+      const sChar = gz.charAt(0);
+      stem.className = `zw-bazi-char ${STEM_ELEMENT_CLASS[sChar] || ""}`;
+      stem.textContent = sChar;
+
+      const branch = document.createElement("span");
+      const bChar = gz.charAt(1);
+      branch.className = `zw-bazi-char ${BRANCH_ELEMENT_CLASS[bChar] || ""}`;
+      branch.textContent = bChar;
+
+      col.append(head, stem, branch);
+      pillarsRow.appendChild(col);
+    });
+
+    wrap.appendChild(pillarsRow);
+    return wrap;
+  }
+
   function renderChart(chart, meta) {
     astrolabeEl.replaceChildren();
 
-    // Center 2x2 Summary Panel
+    // Center 2x2 Panel
     const center = document.createElement("div");
     center.className = "zw-center";
 
-    const centerTitle = document.createElement("div");
-    centerTitle.className = "zw-center-header";
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "zw-sanfang-svg");
+    svg.setAttribute("viewBox", "0 0 100 100");
+    svg.setAttribute("preserveAspectRatio", "none");
+    svg.setAttribute("aria-hidden", "true");
+    center.appendChild(svg);
 
-    const nameEl = document.createElement("h3");
-    nameEl.textContent = `${meta.nickname} 的紫微命盤`;
+    const centerContent = document.createElement("div");
+    centerContent.className = "zw-center-content";
 
-    const fiveEl = document.createElement("span");
-    fiveEl.className = "zw-five-badge";
-    fiveEl.textContent = chart.fiveElementsClass;
+    const brandTitle = document.createElement("div");
+    brandTitle.className = "zw-center-brand";
+    brandTitle.textContent = "玥珩紫微命盤";
 
-    centerTitle.append(nameEl, fiveEl);
+    const yearStem = (chart.chineseDate || "").trim().charAt(0);
+    const isYangStem = ["甲", "丙", "戊", "庚", "壬"].includes(yearStem);
+    const yinYangGender = `${isYangStem ? "陽" : "陰"}${meta.gender}`;
 
-    const infoGrid = document.createElement("dl");
-    infoGrid.className = "zw-info-grid";
+    const topMeta = document.createElement("div");
+    topMeta.className = "zw-center-meta";
+    topMeta.textContent = `姓名：${meta.nickname}　${yinYangGender}　${chart.fiveElementsClass}`;
 
-    const rows = [
-      ["性別／生肖", `${meta.gender}命 · 屬${chart.zodiac}`],
-      ["國曆", chart.solarDate],
-      ["農曆", chart.lunarDate],
-      ["四柱八字", chart.chineseDate],
-      ["生辰時辰", `${chart.time}（${chart.timeRange}）`],
-      ["命主／身主", `命主 ${chart.soul} · 身主 ${chart.body}`]
-    ];
-
-    rows.forEach(([label, val]) => {
-      const wrap = document.createElement("div");
-      wrap.className = "zw-info-row";
-      const dt = document.createElement("dt");
-      dt.textContent = label;
-      const dd = document.createElement("dd");
-      dd.textContent = val;
-      wrap.append(dt, dd);
-      infoGrid.appendChild(wrap);
+    const infoLines = document.createElement("div");
+    infoLines.className = "zw-center-lines";
+    [
+      `國曆：${chart.solarDate}（${chart.time} ${chart.timeRange}）`,
+      `農曆：${chart.lunarDate}`,
+      `命主：${chart.soul}　身主：${chart.body}　生肖：${chart.zodiac}`
+    ].forEach((txt) => {
+      const p = document.createElement("p");
+      p.textContent = txt;
+      infoLines.appendChild(p);
     });
+
+    const baziEl = buildBaziPillars(chart.chineseDate);
+
+    const legend = document.createElement("div");
+    legend.className = "zw-sihua-legend";
+    legend.innerHTML =
+      '<span>四化圖示：</span>' +
+      '<span class="zw-mutagen-box mutagen--lu">祿</span>' +
+      '<span class="zw-mutagen-box mutagen--quan">權</span>' +
+      '<span class="zw-mutagen-box mutagen--ke">科</span>' +
+      '<span class="zw-mutagen-box mutagen--ji">忌</span>';
 
     const focusBox = document.createElement("p");
     focusBox.className = "zw-center-focus";
     focusBox.textContent = "點擊任一宮位，可標示三方四正與主星詳情。";
 
-    center.append(centerTitle, infoGrid, focusBox);
+    centerContent.append(brandTitle, topMeta, infoLines, baziEl, legend, focusBox);
+    center.appendChild(centerContent);
     astrolabeEl.appendChild(center);
 
     // 12 Palaces
@@ -210,71 +345,83 @@ export function initZiwei(showToast) {
         cell.style.setProperty("--zw-area", BRANCH_GRID_AREA[palace.earthlyBranch]);
       }
 
-      // Stars area
-      const starsWrap = document.createElement("div");
-      starsWrap.className = "zw-stars-area";
+      // Top: vertical star columns
+      const starsRow = document.createElement("div");
+      starsRow.className = "zw-stars-cols";
 
-      const majorRow = document.createElement("div");
-      majorRow.className = "zw-major-stars";
-      if (palace.majorStars.length > 0) {
-        palace.majorStars.forEach((s) => majorRow.appendChild(createStarBadge(s, "major")));
-      } else {
-        const emptyMajor = document.createElement("span");
-        emptyMajor.className = "zw-empty-major";
-        emptyMajor.textContent = "空宮";
-        majorRow.appendChild(emptyMajor);
+      palace.majorStars.forEach((s) => starsRow.appendChild(createStarColumn(s, "major")));
+      palace.minorStars.forEach((s) => starsRow.appendChild(createStarColumn(s, "minor")));
+      palace.adjectiveStars.slice(0, 4).forEach((s) => starsRow.appendChild(createStarColumn(s, "adj")));
+
+      // Middle: 小限 ages
+      const agesRow = document.createElement("div");
+      agesRow.className = "zw-ages-row";
+      if (palace.ages?.length) {
+        agesRow.textContent = `小限：${palace.ages.slice(0, 6).join(",")}`;
       }
 
-      const minorRow = document.createElement("div");
-      minorRow.className = "zw-minor-stars";
-      palace.minorStars.forEach((s) => minorRow.appendChild(createStarBadge(s, "minor")));
-      palace.adjectiveStars.slice(0, 4).forEach((s) => minorRow.appendChild(createStarBadge(s, "adj")));
-
-      starsWrap.append(majorRow, minorRow);
-
-      // Footer of palace: name + stem/branch + decadal
+      // Bottom: 3-column traditional footer
       const footer = document.createElement("div");
-      footer.className = "zw-palace-footer";
+      footer.className = "zw-palace-bottom";
 
-      const titleGroup = document.createElement("div");
-      titleGroup.className = "zw-palace-title-group";
+      // Bottom-left: 博士/將前/歲前十二神
+      const godsLeft = document.createElement("div");
+      godsLeft.className = "zw-gods-left";
+      [palace.boshi12, palace.jiangqian12, palace.suiqian12]
+        .filter(Boolean)
+        .forEach((g) => {
+          const s = document.createElement("span");
+          s.textContent = g;
+          godsLeft.appendChild(s);
+        });
 
-      const pName = document.createElement("span");
-      pName.className = "zw-palace-name";
-      if (palace.name === "命宮") pName.classList.add("is-soul");
-      pName.textContent = palace.name;
-      titleGroup.appendChild(pName);
+      // Bottom-center: 大限 + 紅底宮位名
+      const centerBot = document.createElement("div");
+      centerBot.className = "zw-bot-center";
+
+      const decadal = document.createElement("span");
+      decadal.className = "zw-decadal-range";
+      if (palace.decadal?.range) {
+        decadal.textContent = `${palace.decadal.range[0]}~${palace.decadal.range[1]}`;
+      }
+
+      const badgesWrap = document.createElement("div");
+      badgesWrap.className = "zw-palace-badges";
+
+      const palaceBadge = document.createElement("span");
+      palaceBadge.className = "zw-palace-red-badge";
+      palaceBadge.textContent = shortPalaceName(palace.name);
+      badgesWrap.appendChild(palaceBadge);
 
       if (palace.isBodyPalace) {
         const bodyTag = document.createElement("span");
-        bodyTag.className = "zw-tag-badge";
+        bodyTag.className = "zw-body-badge";
         bodyTag.textContent = "身宮";
-        titleGroup.appendChild(bodyTag);
-      }
-      if (palace.isOriginalPalace) {
-        const origTag = document.createElement("span");
-        origTag.className = "zw-tag-badge zw-tag-badge--orig";
-        origTag.textContent = "來因";
-        titleGroup.appendChild(origTag);
+        badgesWrap.appendChild(bodyTag);
       }
 
-      const metaGroup = document.createElement("div");
-      metaGroup.className = "zw-palace-meta";
+      centerBot.append(decadal, badgesWrap);
 
-      const decadal = document.createElement("span");
-      decadal.className = "zw-decadal";
-      if (palace.decadal?.range) {
-        decadal.textContent = `${palace.decadal.range[0]}–${palace.decadal.range[1]}`;
-      }
+      // Bottom-right: 長生十二神 + 垂直干支
+      const rightBot = document.createElement("div");
+      rightBot.className = "zw-bot-right";
+
+      const changsheng = document.createElement("span");
+      changsheng.className = "zw-changsheng";
+      changsheng.textContent = palace.changsheng12 || "";
 
       const gz = document.createElement("span");
-      gz.className = "zw-gz";
-      gz.textContent = `${palace.heavenlyStem}${palace.earthlyBranch}`;
+      gz.className = "zw-gz-vert";
+      for (const ch of `${palace.heavenlyStem}${palace.earthlyBranch}`) {
+        const cSpan = document.createElement("span");
+        cSpan.textContent = ch;
+        gz.appendChild(cSpan);
+      }
 
-      metaGroup.append(decadal, gz);
-      footer.append(titleGroup, metaGroup);
+      rightBot.append(changsheng, gz);
 
-      cell.append(starsWrap, footer);
+      footer.append(godsLeft, centerBot, rightBot);
+      cell.append(starsRow, agesRow, footer);
 
       const selectHandler = () => highlightSanfang(palace.earthlyBranch);
       cell.addEventListener("click", selectHandler);
@@ -297,7 +444,7 @@ export function initZiwei(showToast) {
     e.preventDefault();
     errorEl.hidden = true;
 
-    const nickname = nicknameInput.value.trim() || "命主";
+    const nickname = nicknameInput.value.trim() || "匿名";
     const gender = genderInput.value;
     const calendar = calendarInput.value;
     const year = Number.parseInt(yearInput.value, 10);
@@ -324,12 +471,42 @@ export function initZiwei(showToast) {
       renderChart(chart, currentMeta);
 
       chartStage.hidden = false;
+      downloadButton.hidden = false;
       copyButton.hidden = false;
       chartStage.scrollIntoView({ behavior: "smooth", block: "nearest" });
     } catch (err) {
       errorEl.textContent = `排盤失敗：請確認輸入的${calendar === "lunar" ? "農曆" : "國曆"}日期是否有效（例如該月是否有 ${day} 日或閏月設定）。`;
       errorEl.hidden = false;
       console.error("Ziwei chart error:", err);
+    }
+  });
+
+  downloadButton.addEventListener("click", async () => {
+    if (!currentChart || !currentMeta) return;
+    downloadButton.disabled = true;
+    const origText = downloadButton.textContent;
+    downloadButton.textContent = "產生圖檔中…";
+
+    try {
+      const { default: html2canvas } = await import(
+        "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm"
+      );
+      const canvas = await html2canvas(astrolabeEl, {
+        backgroundColor: "#181a1d",
+        scale: 2,
+        useCORS: true
+      });
+      const link = document.createElement("a");
+      link.download = `${currentMeta.nickname}-紫微命盤.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      showToast?.("已下載紫微命盤圖檔");
+    } catch (err) {
+      console.error("PNG export failed:", err);
+      showToast?.("圖檔產生失敗，請稍後再試");
+    } finally {
+      downloadButton.disabled = false;
+      downloadButton.textContent = origText;
     }
   });
 

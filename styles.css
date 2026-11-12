@@ -1098,92 +1098,137 @@ button:focus-visible {
   text-align: center;
 }
 
-/* 4x4 Traditional Astrolabe Grid */
+/* 4x4 Traditional Astrolabe Grid (文墨天機風格) */
 .zw-astrolabe {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-template-rows: repeat(4, minmax(156px, auto));
-  gap: 8px;
-  padding: 10px;
-  border: 1px solid var(--gold-soft);
-  border-radius: 20px;
-  background: var(--bg-subtle);
+  grid-template-rows: repeat(4, minmax(185px, auto));
+  gap: 1px;
+  background: #6f747c;
+  border: 2px solid #9da3ac;
+  border-radius: 6px;
+  overflow: hidden;
+  color: #e8ecf1;
 }
 
 .zw-center {
+  position: relative;
   grid-area: 2 / 2 / 4 / 4;
+  background: #181a1d;
+  overflow: hidden;
+}
+
+.zw-sanfang-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.zw-center-content {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 12px;
-  padding: 18px 20px;
-  border: 1px solid var(--gold-soft);
-  border-radius: 14px;
-  background: var(--bg-card);
-  box-shadow: inset 0 0 0 1px var(--border);
-}
-
-.zw-center-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
   gap: 8px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border);
+  height: 100%;
+  padding: 16px 20px;
 }
 
-.zw-center-header h3 {
-  margin: 0;
-  color: var(--text-heading);
+.zw-center-brand {
+  text-align: center;
+  color: #f3f4f6;
   font-family: var(--font-serif);
-  font-size: 1.25rem;
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+.zw-center-meta {
+  text-align: center;
+  color: #e5e7eb;
+  font-size: 0.92rem;
   font-weight: 600;
 }
 
-.zw-five-badge {
-  padding: 3px 10px;
-  border: 1px solid var(--gold-soft);
-  border-radius: 999px;
-  background: var(--bg-subtle);
-  color: var(--gold);
-  font-size: 0.82rem;
+.zw-center-lines {
+  display: grid;
+  gap: 3px;
+  font-size: 0.84rem;
+  color: #d1d5db;
+  text-align: center;
+}
+
+.zw-center-lines p {
+  margin: 0;
+}
+
+.zw-bazi-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.zw-bazi-label {
+  font-size: 0.72rem;
+  color: #9ca3af;
+  letter-spacing: 0.1em;
+}
+
+.zw-bazi-pillars {
+  display: flex;
+  gap: 18px;
+}
+
+.zw-bazi-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+}
+
+.zw-bazi-head {
+  font-size: 0.68rem;
+  color: #9ca3af;
+  margin-bottom: 2px;
+}
+
+.zw-bazi-char {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
   font-weight: 700;
 }
 
-.zw-info-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px 14px;
-  margin: 0;
-}
+.el-wood { color: #52c47c; }
+.el-fire { color: #e8685a; }
+.el-earth { color: #d9a74a; }
+.el-metal { color: #e5e7eb; }
+.el-water { color: #5aa9e6; }
 
-.zw-info-row {
+.zw-sihua-legend {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.zw-info-row dt {
-  color: var(--muted);
-  font-size: 0.75rem;
-}
-
-.zw-info-row dd {
-  margin: 0;
-  color: var(--text);
-  font-size: 0.86rem;
-  font-weight: 600;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #d1d5db;
 }
 
 .zw-center-focus {
   margin: 0;
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: var(--bg-subtle);
-  color: var(--text-heading);
-  font-size: 0.84rem;
-  line-height: 1.55;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  background: rgba(24, 26, 29, 0.82);
+  color: #f3f4f6;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  text-align: center;
 }
 
 /* Palace Cell */
@@ -1192,163 +1237,184 @@ button:focus-visible {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 10px;
-  padding: 11px 12px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--bg-card);
+  gap: 6px;
+  padding: 8px 9px;
+  background: #181a1d;
   cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+  transition: background 0.18s ease, box-shadow 0.18s ease;
 }
 
 .zw-palace:hover {
-  border-color: var(--border-strong);
+  background: #202328;
 }
 
 .zw-palace.is-selected {
-  border-color: var(--gold);
-  box-shadow: 0 0 0 2px var(--gold-soft), var(--shadow-card);
+  background: #22262c;
+  box-shadow: inset 0 0 0 2px #d4b679;
 }
 
 .zw-palace.is-sanfang {
-  border-color: var(--sage);
-  box-shadow: inset 0 0 0 1px rgba(111, 132, 112, 0.3);
+  background: #1d2126;
+  box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.55);
 }
 
-.zw-stars-area {
+/* Vertical Star Columns */
+.zw-stars-cols {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 4px 5px;
+  min-height: 74px;
+}
+
+.zw-star-col {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-}
-
-.zw-major-stars {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 6px;
-}
-
-.zw-minor-stars {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px 5px;
-}
-
-.zw-star {
-  display: inline-flex;
   align-items: center;
-  gap: 2px;
-  font-size: 0.78rem;
-  line-height: 1.3;
+  gap: 1px;
+  line-height: 1.1;
 }
 
-.zw-star--major {
-  color: var(--text-heading);
-  font-family: var(--font-serif);
-  font-size: 0.92rem;
+.zw-star-vert {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.08;
+}
+
+.zw-star-col--major .zw-star-vert {
+  color: #38d9c0;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
-.zw-star--minor {
-  color: var(--sage-strong);
+.zw-star-col--minor .zw-star-vert {
+  color: #e2b758;
   font-size: 0.76rem;
   font-weight: 600;
 }
 
-.zw-star--adj {
-  color: var(--muted);
-  font-size: 0.72rem;
+.zw-star-col--malefic .zw-star-vert {
+  color: #b892ff;
+  font-size: 0.76rem;
+  font-weight: 600;
 }
 
-.zw-empty-major {
-  color: var(--muted);
-  font-size: 0.8rem;
-  font-style: italic;
+.zw-star-col--adj .zw-star-vert {
+  color: #c4c9d1;
+  font-size: 0.7rem;
+  font-weight: 400;
 }
 
-.zw-brightness {
-  color: var(--muted);
-  font-family: var(--font-sans);
-  font-size: 0.68rem;
-  font-weight: 500;
+.zw-star-bright {
+  color: #9ca3af;
+  font-size: 0.65rem;
 }
 
-.zw-mutagen {
+.zw-mutagen-box {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 4px;
-  border-radius: 4px;
-  font-family: var(--font-sans);
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  color: #ffffff;
   font-size: 0.68rem;
   font-weight: 700;
-  color: #fffdf8;
+  line-height: 1;
 }
 
-.mutagen--lu { background: #4a7c59; }
-.mutagen--quan { background: #b48a3e; }
-.mutagen--ke { background: #4a6b8a; }
-.mutagen--ji { background: #b25347; }
+.mutagen--lu { background: #2f9e5a; }
+.mutagen--quan { background: #9b4dca; }
+.mutagen--ke { background: #2d7dd2; }
+.mutagen--ji { background: #d9483b; }
 
-.zw-palace-footer {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 6px;
-  padding-top: 6px;
-  border-top: 1px dashed var(--border);
+.zw-ages-row {
+  color: #9ca3af;
+  font-size: 0.66rem;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.zw-palace-title-group {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+/* Traditional 3-part Palace Bottom */
+.zw-palace-bottom {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: end;
   gap: 4px;
 }
 
-.zw-palace-name {
-  padding: 2px 7px;
-  border-radius: 6px;
-  background: var(--bg-subtle);
-  color: var(--text-heading);
+.zw-gods-left {
+  display: flex;
+  flex-direction: column;
+  color: #9ca3af;
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+
+.zw-bot-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.zw-decadal-range {
+  color: #e5e7eb;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.zw-palace-badges {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.zw-palace-red-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: #c93b32;
+  color: #ffffff;
   font-size: 0.78rem;
   font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
-.zw-palace-name.is-soul {
-  background: var(--sage-strong);
-  color: #fffdf8;
-}
-
-[data-theme="dark"] .zw-palace-name.is-soul {
-  color: #121814;
-}
-
-.zw-tag-badge {
-  padding: 1px 5px;
-  border-radius: 4px;
-  background: var(--gold-soft);
-  color: var(--gold);
-  font-size: 0.68rem;
+.zw-body-badge {
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: #2b7a9b;
+  color: #ffffff;
+  font-size: 0.66rem;
   font-weight: 700;
 }
 
-.zw-palace-meta {
+.zw-bot-right {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  line-height: 1.25;
+  gap: 2px;
 }
 
-.zw-decadal {
-  color: var(--muted);
-  font-size: 0.68rem;
+.zw-changsheng {
+  color: #9ca3af;
+  font-size: 0.66rem;
 }
 
-.zw-gz {
-  color: var(--gold);
+.zw-gz-vert {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #f3f4f6;
   font-family: var(--font-serif);
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.08;
 }
 
 @media (max-width: 820px) {
@@ -1367,6 +1433,10 @@ button:focus-visible {
     grid-column: 1 / -1;
   }
 
+  .zw-sanfang-svg {
+    display: none;
+  }
+
   .zw-palace {
     grid-area: auto !important;
   }
@@ -1375,8 +1445,7 @@ button:focus-visible {
 @media (max-width: 560px) {
   .zw-form-grid,
   .zw-date-grid,
-  .zw-astrolabe,
-  .zw-info-grid {
+  .zw-astrolabe {
     grid-template-columns: 1fr;
   }
 }

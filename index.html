@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="玥珩的雷諾曼牌卡占卜：每日一牌、三選項比較、五張牌陣與九宮格全景，以溫潤療癒的視角整理思緒與方向。" />
+  <meta name="description" content="玥珩的靈性占卜空間：結合雷諾曼牌卡占卜與紫微斗數命盤排盤，以溫潤療癒的視角整理思緒與方向。" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="玥珩｜雷諾曼牌卡占卜" />
-  <meta property="og:description" content="用溫潤、療癒的靈性光芒為混亂的系統找回秩序。支援每日一牌、三選項比較、五張牌陣與九宮格占卜。" />
+  <meta property="og:title" content="玥珩｜雷諾曼占卜・紫微斗數" />
+  <meta property="og:description" content="用溫潤、療癒的靈性光芒為混亂的系統找回秩序。支援雷諾曼牌卡占卜與紫微斗數命盤排盤。" />
   <meta property="og:image" content="avatar.jpg" />
-  <title>玥珩｜雷諾曼牌卡占卜</title>
+  <title>玥珩｜雷諾曼占卜・紫微斗數</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -26,7 +26,8 @@
       </div>
 
       <div class="nav-tabs" role="tablist" aria-label="功能切換">
-        <button class="nav-tab is-active" type="button" role="tab" aria-selected="true" data-view="reading">占卜台</button>
+        <button class="nav-tab is-active" type="button" role="tab" aria-selected="true" data-view="reading">雷諾曼占卜</button>
+        <button class="nav-tab" type="button" role="tab" aria-selected="false" data-view="ziwei">紫微斗數</button>
         <button class="nav-tab" type="button" role="tab" aria-selected="false" data-view="library">牌義圖鑑</button>
         <button class="nav-tab" type="button" role="tab" aria-selected="false" data-view="history">
           占卜紀錄 <span id="historyCount" class="badge-count" hidden>0</span>
@@ -117,6 +118,95 @@
           </div>
 
           <div id="results" class="results-stage"></div>
+        </section>
+      </section>
+
+      <!-- VIEW 2: ZI WEI DOU SHU -->
+      <section id="view-ziwei" class="view-section" role="tabpanel" hidden>
+        <header class="intro">
+          <h2>紫微斗數｜命盤排盤</h2>
+          <p>輸入暱稱、性別與出生年月日時（可選國曆或農曆），排出專屬十二宮星盤與三方四正。</p>
+        </header>
+
+        <section class="panel" aria-label="紫微斗數排盤設定">
+          <form id="ziweiForm" novalidate>
+            <div class="zw-form-grid">
+              <div class="zw-field">
+                <label class="field-label" for="zwNickname">暱稱 <span class="label-hint">（選填）</span></label>
+                <input id="zwNickname" type="text" maxlength="30" placeholder="例如：玥珩" />
+              </div>
+
+              <div class="zw-field">
+                <span class="field-label">性別</span>
+                <div class="segmented-group" role="radiogroup" aria-label="性別">
+                  <button class="seg-btn is-active" type="button" data-zw-gender="女" aria-pressed="true">女</button>
+                  <button class="seg-btn" type="button" data-zw-gender="男" aria-pressed="false">男</button>
+                </div>
+                <input id="zwGender" type="hidden" value="女" />
+              </div>
+
+              <div class="zw-field">
+                <span class="field-label">曆法選擇</span>
+                <div class="segmented-group" role="radiogroup" aria-label="曆法選擇">
+                  <button class="seg-btn is-active" type="button" data-zw-calendar="solar" aria-pressed="true">國曆（陽曆）</button>
+                  <button class="seg-btn" type="button" data-zw-calendar="lunar" aria-pressed="false">農曆（陰曆）</button>
+                </div>
+                <input id="zwCalendar" type="hidden" value="solar" />
+              </div>
+            </div>
+
+            <div class="zw-date-grid">
+              <div class="zw-field">
+                <label class="field-label" for="zwYear">出生年（西元）</label>
+                <input id="zwYear" type="number" min="1900" max="2050" value="1995" required />
+              </div>
+              <div class="zw-field">
+                <label class="field-label" for="zwMonth">月</label>
+                <select id="zwMonth" aria-label="出生月份"></select>
+              </div>
+              <div class="zw-field">
+                <label class="field-label" for="zwDay">日</label>
+                <select id="zwDay" aria-label="出生日期"></select>
+              </div>
+              <div class="zw-field">
+                <label class="field-label" for="zwTimeIndex">出生時辰</label>
+                <select id="zwTimeIndex" aria-label="出生時辰">
+                  <option value="0">早子時 (00:00–00:59)</option>
+                  <option value="1">丑時 (01:00–02:59)</option>
+                  <option value="2">寅時 (03:00–04:59)</option>
+                  <option value="3">卯時 (05:00–06:59)</option>
+                  <option value="4">辰時 (07:00–08:59)</option>
+                  <option value="5">巳時 (09:00–10:59)</option>
+                  <option value="6" selected>午時 (11:00–12:59)</option>
+                  <option value="7">未時 (13:00–14:59)</option>
+                  <option value="8">申時 (15:00–16:59)</option>
+                  <option value="9">酉時 (17:00–18:59)</option>
+                  <option value="10">戌時 (19:00–20:59)</option>
+                  <option value="11">亥時 (21:00–22:59)</option>
+                  <option value="12">晚子時 (23:00–23:59)</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="zwLeapWrap" class="zw-leap-wrap" hidden>
+              <label class="zw-checkbox">
+                <input id="zwLeapMonth" type="checkbox" />
+                <span>此出生月份為農曆閏月</span>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button id="zwDrawButton" class="btn-primary" type="submit">排出命盤</button>
+              <button id="zwCopyButton" class="btn-secondary" type="button" hidden>複製命盤摘要</button>
+            </div>
+          </form>
+
+          <p id="zwError" class="zw-error" role="alert" hidden></p>
+
+          <div id="zwChartStage" class="zw-chart-stage" hidden>
+            <p class="zw-hint">提示：點擊任一宮位，可高亮顯示該宮的「三方四正」（對宮與三合宮）並查看星曜詳情。</p>
+            <div id="zwAstrolabe" class="zw-astrolabe" aria-label="紫微斗數十二宮命盤"></div>
+          </div>
         </section>
       </section>
 

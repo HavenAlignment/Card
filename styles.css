@@ -1437,3 +1437,129 @@ button:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================
+   ZI WEI READING PANEL (基本解盤 + AI 提示詞)
+   ========================================================= */
+
+.zw-reading-section {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.zw-reading-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.zw-reading-header h3 {
+  margin: 0 0 4px;
+  color: var(--text-heading);
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.zw-reading-intro {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.zw-ai-btn {
+  white-space: nowrap;
+}
+
+.zw-reading-content {
+  display: grid;
+  gap: 16px;
+}
+
+.zw-reading-card {
+  padding: 20px 22px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+}
+
+.zw-reading-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.zw-reading-card-head h4 {
+  margin: 0;
+  color: var(--text-heading);
+  font-family: var(--font-serif);
+  font-size: 1.12rem;
+  font-weight: 600;
+}
+
+.zw-reading-badge {
+  padding: 3px 10px;
+  border: 1px solid var(--gold-soft);
+  border-radius: 999px;
+  background: var(--bg-subtle);
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.zw-reading-card p {
+  margin: 0 0 10px;
+  color: var(--text);
+  font-size: 0.94rem;
+  line-height: 1.75;
+}
+
+.zw-reading-card p:last-child {
+  margin-bottom: 0;
+}
+
+.zw-reading-sub {
+  color: var(--muted) !important;
+  font-size: 0.88rem !important;
+}
+
+.zw-reading-advice {
+  padding: 10px 14px;
+  border-left: 3px solid var(--gold);
+  border-radius: 0 10px 10px 0;
+  background: var(--bg-subtle);
+  color: var(--text-heading) !important;
+  font-weight: 500;
+}
+
+.zw-sihua-list {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+  color: var(--text);
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.zw-domain-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (max-width: 720px) {
+  .zw-domain-grid {
+    grid-template-columns: 1fr;
+  }
+}

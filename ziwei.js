@@ -1,4 +1,5 @@
 import { astro } from "https://cdn.jsdelivr.net/npm/iztro@2.6.5/+esm";
+import { buildZiweiAiPrompt, renderZiweiReading } from "./ziwei-reading.js";
 
 const BRANCH_ORDER = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
 
@@ -81,6 +82,8 @@ export function initZiwei(showToast) {
   const errorEl = document.getElementById("zwError");
   const chartStage = document.getElementById("zwChartStage");
   const astrolabeEl = document.getElementById("zwAstrolabe");
+  const readingContentEl = document.getElementById("zwReadingContent");
+  const copyAiPromptButton = document.getElementById("zwCopyAiPromptButton");
 
   const genderBtns = form.querySelectorAll("[data-zw-gender]");
   const calendarBtns = form.querySelectorAll("[data-zw-calendar]");
@@ -469,6 +472,7 @@ export function initZiwei(showToast) {
       currentChart = chart;
       currentMeta = { nickname, gender, calendar };
       renderChart(chart, currentMeta);
+      renderZiweiReading(readingContentEl, chart, currentMeta);
 
       chartStage.hidden = false;
       downloadButton.hidden = false;
@@ -507,6 +511,17 @@ export function initZiwei(showToast) {
     } finally {
       downloadButton.disabled = false;
       downloadButton.textContent = origText;
+    }
+  });
+
+  copyAiPromptButton?.addEventListener("click", async () => {
+    if (!currentChart || !currentMeta) return;
+    const promptText = buildZiweiAiPrompt(currentChart, currentMeta);
+    try {
+      await navigator.clipboard.writeText(promptText);
+      showToast?.("已複製 AI 深度解盤指令，可直接貼給 ChatGPT / Gemini");
+    } catch {
+      showToast?.("無法自動複製，請確認瀏覽器剪貼簿權限");
     }
   });
 

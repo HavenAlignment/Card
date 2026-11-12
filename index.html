@@ -1,492 +1,171 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-Hant" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="玥珩的雷諾曼牌卡占卜：比較三個選項，或為單一問題抽五張牌。" />
+  <meta name="description" content="玥珩的雷諾曼牌卡占卜：每日一牌、三選項比較、五張牌陣與九宮格全景，以溫潤療癒的視角整理思緒與方向。" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="玥珩｜雷諾曼牌卡占卜" />
+  <meta property="og:description" content="用溫潤、療癒的靈性光芒為混亂的系統找回秩序。支援每日一牌、三選項比較、五張牌陣與九宮格占卜。" />
+  <meta property="og:image" content="avatar.jpg" />
   <title>玥珩｜雷諾曼牌卡占卜</title>
-  <style>
-    :root {
-      color-scheme: light;
-      --background: #f5f2e9;
-      --panel: rgba(255, 253, 247, 0.92);
-      --panel-light: #edf0e7;
-      --text: #35443c;
-      --muted: #718076;
-      --sage: #829481;
-      --border: rgba(91, 112, 93, 0.2);
-      --shadow: 0 16px 42px rgba(67, 82, 67, 0.1);
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      min-height: 100vh;
-      margin: 0;
-      padding: 32px 16px;
-      background:
-        radial-gradient(ellipse at 12% 8%, rgba(216, 224, 204, 0.65), transparent 34%),
-        radial-gradient(ellipse at 92% 20%, rgba(239, 222, 190, 0.5), transparent 30%),
-        var(--background);
-      color: var(--text);
-      font-family: "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
-    }
-
-    main {
-      width: min(1000px, 100%);
-      margin: 0 auto;
-    }
-
-    .profile, .panel {
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      background: var(--panel);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(8px);
-    }
-
-    .profile {
-      display: flex;
-      align-items: center;
-      gap: 22px;
-      margin-bottom: 30px;
-      padding: 24px;
-    }
-
-    .profile-avatar {
-      width: 116px;
-      height: 116px;
-      flex: 0 0 116px;
-      border: 4px solid #fffdf7;
-      border-radius: 50%;
-      background: var(--panel-light);
-      box-shadow: 0 0 0 1px var(--border), 0 8px 20px rgba(67, 82, 67, 0.13);
-      object-fit: cover;
-    }
-
-    .profile-label {
-      margin: 0 0 7px;
-      color: var(--sage);
-      font-size: 0.76rem;
-      font-weight: 700;
-      letter-spacing: 0.2em;
-    }
-
-    .profile-info h1 {
-      margin: 0 0 9px;
-      color: #647765;
-      font-family: "Noto Serif TC", "Songti TC", serif;
-      font-size: 1.8rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-    }
-
-    .profile-info p:last-child {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.9;
-    }
-
-    .intro {
-      margin: 0 0 24px;
-      text-align: center;
-    }
-
-    .intro h2 {
-      margin: 0 0 8px;
-      color: #647765;
-      font-family: "Noto Serif TC", "Songti TC", serif;
-      font-size: clamp(1.7rem, 5vw, 2.4rem);
-      font-weight: 600;
-      letter-spacing: 0.08em;
-    }
-
-    .intro p, .note {
-      color: var(--muted);
-      line-height: 1.8;
-    }
-
-    .panel {
-      padding: 26px;
-    }
-
-    label {
-      display: block;
-      color: #536558;
-      font-weight: 650;
-    }
-
-    .question-label { margin-bottom: 8px; }
-    .mode-label { margin-top: 20px; margin-bottom: 8px; }
-
-    input, select {
-      width: 100%;
-      min-height: 48px;
-      padding: 11px 14px;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background: #fffefa;
-      color: var(--text);
-      font: inherit;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    input::placeholder { color: #a2aaa0; }
-
-    input:focus, select:focus {
-      border-color: var(--sage);
-      box-shadow: 0 0 0 3px rgba(130, 148, 129, 0.16);
-      outline: none;
-    }
-
-    .option-inputs {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 18px;
-    }
-
-    .option-inputs[hidden] { display: none; }
-
-    .option-inputs label {
-      display: grid;
-      gap: 8px;
-    }
-
-    button {
-      min-height: 48px;
-      margin-top: 20px;
-      padding: 11px 22px;
-      border: 0;
-      border-radius: 999px;
-      background: #758875;
-      color: #fffdf7;
-      cursor: pointer;
-      font: inherit;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      box-shadow: 0 6px 16px rgba(91, 112, 93, 0.2);
-      transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    button:hover {
-      transform: translateY(-2px);
-      background: #647765;
-      box-shadow: 0 9px 20px rgba(91, 112, 93, 0.24);
-    }
-
-    button:focus-visible {
-      outline: 3px solid #b99869;
-      outline-offset: 3px;
-    }
-
-    .question-result {
-      margin: 20px 0 0;
-      color: var(--muted);
-      line-height: 1.8;
-      overflow-wrap: anywhere;
-    }
-
-    .spread-block {
-      margin-top: 24px;
-      padding: 22px;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      background: rgba(247, 248, 241, 0.86);
-    }
-
-    .spread-block h2 {
-      margin: 0 0 10px;
-      color: #647765;
-      font-family: "Noto Serif TC", "Songti TC", serif;
-      font-size: 1.35rem;
-      font-weight: 600;
-      overflow-wrap: anywhere;
-    }
-
-    .spread-summary {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.9;
-      overflow-wrap: anywhere;
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
-      margin-top: 18px;
-    }
-
-    .card {
-      min-width: 0;
-      padding: 18px;
-      border: 1px solid rgba(112, 132, 111, 0.18);
-      border-radius: 18px;
-      background: linear-gradient(155deg, #fffefa, #f1f3eb);
-      box-shadow: 0 7px 18px rgba(67, 82, 67, 0.06);
-    }
-
-    .position {
-      min-height: 2.8em;
-      margin-bottom: 12px;
-      color: #8a7959;
-      font-size: 0.88rem;
-      font-weight: 700;
-      line-height: 1.6;
-    }
-
-    .card-symbol {
-      margin-bottom: 8px;
-      font-size: 2rem;
-    }
-
-    .card h3 {
-      margin: 0 0 10px;
-      color: #536558;
-      font-size: 1.2rem;
-    }
-
-    .card p {
-      margin: 8px 0 0;
-      color: var(--muted);
-      line-height: 1.75;
-      overflow-wrap: anywhere;
-    }
-
-    .note {
-      margin: 20px 4px 0;
-      font-size: 0.9rem;
-      text-align: center;
-    }
-
-    @media (max-width: 700px) {
-      body { padding: 20px 12px; }
-      .profile { gap: 15px; padding: 18px; }
-      .profile-avatar { width: 86px; height: 86px; flex-basis: 86px; }
-      .profile-info h1 { font-size: 1.45rem; }
-      .panel { padding: 18px; }
-      .option-inputs, .cards { grid-template-columns: 1fr; }
-      .position { min-height: 0; }
-    }
-
-    @media (max-width: 380px) {
-      .profile { align-items: flex-start; flex-direction: column; }
-    }
-  </style>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main>
-    <section class="profile" aria-label="關於玥珩">
-      <img class="profile-avatar" src="avatar.jpg.jpg" alt="玥珩的頭貼" />
-      <div class="profile-info">
-        <p class="profile-label">ABOUT ME</p>
-        <h1>我是玥珩</h1>
-        <p>用溫潤、療癒的靈性光芒為混亂的系統找回秩序</p>
-      </div>
-    </section>
+  <div class="ambient-bg" aria-hidden="true"></div>
 
-    <header class="intro">
-      <h2>雷諾曼｜牌卡占卜</h2>
-      <p>選擇比較三個情境，或為單一問題抽五張牌，探索不同方向。</p>
-    </header>
-
-    <section class="panel" aria-label="雷諾曼牌卡占卜">
-      <label class="question-label" for="question">你的問題</label>
-      <input id="question" type="text" maxlength="200" placeholder="例如：我該如何規劃接下來的工作？" />
-
-      <label class="mode-label" for="readingMode">選擇占卜方式</label>
-      <select id="readingMode">
-        <option value="compare">三選項比較｜每個情境抽 3 張</option>
-        <option value="five">單一問題｜抽 5 張</option>
-      </select>
-
-      <div id="optionInputs" class="option-inputs">
-        <label for="option1">情境一<input id="option1" type="text" maxlength="60" placeholder="例如：接受新的工作機會" /></label>
-        <label for="option2">情境二<input id="option2" type="text" maxlength="60" placeholder="例如：留在目前的工作" /></label>
-        <label for="option3">情境三<input id="option3" type="text" maxlength="60" placeholder="例如：繼續尋找其他機會" /></label>
+  <div class="app-shell">
+    <nav class="topbar" aria-label="主導覽">
+      <div class="brand-lockup">
+        <span class="brand-emblem" aria-hidden="true">✦</span>
+        <span class="brand-name">HAVEN LENORMAND</span>
       </div>
 
-      <button id="drawButton" type="button">開始抽牌</button>
-      <p id="questionResult" class="question-result" aria-live="polite">輸入問題並選擇占卜方式。</p>
-      <div id="results"></div>
-    </section>
+      <div class="nav-tabs" role="tablist" aria-label="功能切換">
+        <button class="nav-tab is-active" type="button" role="tab" aria-selected="true" data-view="reading">占卜台</button>
+        <button class="nav-tab" type="button" role="tab" aria-selected="false" data-view="library">牌義圖鑑</button>
+        <button class="nav-tab" type="button" role="tab" aria-selected="false" data-view="history">
+          占卜紀錄 <span id="historyCount" class="badge-count" hidden>0</span>
+        </button>
+      </div>
 
-    <p class="note">牌面解讀是象徵性的參考，適合用來整理想法與自我探索，不代表確定的結果。</p>
-  </main>
+      <button id="themeToggle" class="icon-btn" type="button" aria-label="切換深淺色主題" title="切換深淺色主題">
+        <span class="theme-icon-light" aria-hidden="true">☾</span>
+        <span class="theme-icon-dark" aria-hidden="true">☀</span>
+      </button>
+    </nav>
 
-  <script>
-    const deck = [
-      { number: 1, name: "騎士", symbol: "🐎", meaning: "消息、來訪、行動與新的進展。", advice: "留意新消息，也可以主動採取行動。" },
-      { number: 2, name: "四葉草", symbol: "🍀", meaning: "小小的幸運、短暫機會與輕鬆感。", advice: "把握眼前的小機會，但別把短暫好運當成長期保證。" },
-      { number: 3, name: "船", symbol: "⛵", meaning: "旅行、距離、探索與逐漸展開的變化。", advice: "保持開放，事情可能需要時間或跨出熟悉範圍。" },
-      { number: 4, name: "房子", symbol: "🏠", meaning: "家庭、住處、安全感與穩固的基礎。", advice: "確認你的生活與計畫是否有穩定支撐。" },
-      { number: 5, name: "樹", symbol: "🌳", meaning: "成長、健康、根基與需要時間的發展。", advice: "耐心培養，留意身心狀態與長期累積。" },
-      { number: 6, name: "雲", symbol: "☁️", meaning: "困惑、資訊不清、猶豫與暫時的迷霧。", advice: "先釐清事實，避免在不確定時急著下結論。" },
-      { number: 7, name: "蛇", symbol: "🐍", meaning: "複雜情況、迂迴策略或需要謹慎的人際關係。", advice: "多看一層，確認資訊與界線。" },
-      { number: 8, name: "棺材", symbol: "⚰️", meaning: "結束、停頓、告一段落與轉化的空間。", advice: "接受某個階段可能已經完成，為新安排留出位置。" },
-      { number: 9, name: "花束", symbol: "💐", meaning: "邀請、欣賞、愉快的驚喜與友善互動。", advice: "接受善意，也可以真誠表達感謝。" },
-      { number: 10, name: "鐮刀", symbol: "🌾", meaning: "迅速決定、突然變化與需要注意的風險。", advice: "做重要決定前先停一下，留意可能後果。" },
-      { number: 11, name: "鞭子", symbol: "〰️", meaning: "爭論、反覆、壓力與持續重複的模式。", advice: "辨認反覆發生的問題，避免衝突升高。" },
-      { number: 12, name: "鳥", symbol: "🐦", meaning: "交談、消息往來、短暫忙亂或緊張感。", advice: "把話說清楚，也留時間整理思緒。" },
-      { number: 13, name: "小孩", symbol: "🧒", meaning: "新開始、學習、好奇心與尚在萌芽的事物。", advice: "從小步開始，保持彈性，不必一開始就完美。" },
-      { number: 14, name: "狐狸", symbol: "🦊", meaning: "工作、機敏、策略與需要核實的情況。", advice: "仔細確認細節，尤其是工作安排與承諾。" },
-      { number: 15, name: "熊", symbol: "🐻", meaning: "力量、保護、資源、權威或強烈的影響力。", advice: "善用手上的資源，也注意權力與控制的平衡。" },
-      { number: 16, name: "星星", symbol: "⭐", meaning: "希望、靈感、方向感與長遠願景。", advice: "看清目標，持續前進，也可尋求啟發。" },
-      { number: 17, name: "鸛鳥", symbol: "🕊️", meaning: "改變、搬遷、更新與逐步改善。", advice: "為變化預留空間，調整做法可能帶來進展。" },
-      { number: 18, name: "狗", symbol: "🐕", meaning: "友誼、忠誠、支持與值得信賴的夥伴。", advice: "珍惜可靠的支持，也用行動維護信任。" },
-      { number: 19, name: "塔", symbol: "🏛️", meaning: "機構、規則、界線、獨立與長期結構。", advice: "看清制度或界線如何影響你，必要時保持距離。" },
-      { number: 20, name: "花園", symbol: "🌷", meaning: "社交場合、社群、公開活動與人際網絡。", advice: "適度交流或參與社群，可能帶來幫助。" },
-      { number: 21, name: "山", symbol: "⛰️", meaning: "阻礙、延遲、距離感與需要克服的難題。", advice: "拆分問題，一步一步處理，不要低估阻力。" },
-      { number: 22, name: "岔路", symbol: "↔️", meaning: "選擇、分岔、不同可能與需要決定的方向。", advice: "比較選項與代價，選擇符合優先順序的道路。" },
-      { number: 23, name: "老鼠", symbol: "🐭", meaning: "消耗、損失、煩惱與逐漸累積的小問題。", advice: "及早處理正在消耗時間、金錢或心力的事情。" },
-      { number: 24, name: "心", symbol: "❤️", meaning: "感情、喜愛、熱情與真正在意的事物。", advice: "留意自己的感受，也清楚表達心意。" },
-      { number: 25, name: "戒指", symbol: "💍", meaning: "承諾、契約、合作與循環往復的關係。", advice: "確認彼此對承諾的理解一致，留意合作條件。" },
-      { number: 26, name: "書", symbol: "📖", meaning: "知識、學習、秘密與尚未揭露的資訊。", advice: "繼續蒐集資料，目前可能還有資訊未明。" },
-      { number: 27, name: "信", symbol: "✉️", meaning: "訊息、文件、通知與書面往來。", advice: "檢查訊息與文件細節，重要事項留下紀錄。" },
-      { number: 28, name: "男士", symbol: "👤", meaning: "重要的男性人物，或問題中具有陽性能量的一方。", advice: "留意這位人物的立場，也可依牌組慣例代入不同角色。" },
-      { number: 29, name: "女士", symbol: "👤", meaning: "重要的女性人物，或問題中具有陰性能量的一方。", advice: "留意這位人物的立場，也可依牌組慣例代入不同角色。" },
-      { number: 30, name: "百合", symbol: "🌸", meaning: "成熟、平和、經驗、家庭和諧或親密關係。", advice: "用成熟與耐心處理事情，讓溝通回到平靜。" },
-      { number: 31, name: "太陽", symbol: "☀️", meaning: "活力、成功、清晰、信心與正向成果。", advice: "看見已有的優勢，保持行動力並分享成果。" },
-      { number: 32, name: "月亮", symbol: "🌙", meaning: "情緒、直覺、想像力、聲譽與被認可的需求。", advice: "重視感受與創意，也分辨直覺和一時情緒。" },
-      { number: 33, name: "鑰匙", symbol: "🗝️", meaning: "關鍵、解答、重要發現與開啟機會。", advice: "留意能讓問題突破的關鍵資訊或行動。" },
-      { number: 34, name: "魚", symbol: "🐟", meaning: "金錢、資源、流動、交易與自主性。", advice: "檢視資源如何流動，特別留意財務與交易細節。" },
-      { number: 35, name: "錨", symbol: "⚓", meaning: "穩定、持久、工作、安全感與堅持。", advice: "穩定累積有助長期成果，也留意是否過度停滯。" },
-      { number: 36, name: "十字架", symbol: "✝️", meaning: "責任、考驗、沉重課題與需要承擔的事情。", advice: "正視壓力，分辨哪些責任值得承擔、哪些需要放下。" }
-    ];
+    <main>
+      <section class="profile" aria-label="關於玥珩">
+        <img class="profile-avatar" src="avatar.jpg" width="96" height="96" alt="玥珩的頭貼" />
+        <div class="profile-info">
+          <p class="profile-label">ABOUT ME · HEALING ATELIER</p>
+          <h1>我是玥珩</h1>
+          <p class="profile-bio">用溫潤、療癒的靈性光芒為混亂的系統找回秩序</p>
+        </div>
+      </section>
 
-    const comparePositions = [
-      { name: "起點", prompt: "出發狀態或背景" },
-      { name: "發展", prompt: "選擇後可能經歷的過程" },
-      { name: "可能趨勢", prompt: "沿著此方向前進的可能發展" }
-    ];
+      <!-- VIEW 1: READING -->
+      <section id="view-reading" class="view-section" role="tabpanel">
+        <header class="intro">
+          <h2>雷諾曼｜牌卡占卜</h2>
+          <p>靜下心來釐清一個念頭，選擇適合的牌陣，透過 36 張經典象徵看見當下的脈絡。</p>
+        </header>
 
-    const fiveCardPositions = [
-      { name: "背景", prompt: "影響目前情況的背景" },
-      { name: "現況", prompt: "目前的核心狀態" },
-      { name: "挑戰", prompt: "需要留意或面對的部分" },
-      { name: "建議", prompt: "可以思考或採取的方向" },
-      { name: "可能趨勢", prompt: "沿著目前方向前進的可能發展" }
-    ];
+        <section class="panel" aria-label="占卜設定">
+          <form id="readingForm" novalidate>
+            <div class="field-group">
+              <span class="field-label">選擇占卜牌陣</span>
+              <div class="mode-pills" role="radiogroup" aria-label="占卜牌陣">
+                <button class="mode-pill" type="button" data-mode="daily" aria-pressed="false">
+                  <span class="pill-title">每日一牌</span>
+                  <span class="pill-sub">1 張 · 今日指引</span>
+                </button>
+                <button class="mode-pill is-active" type="button" data-mode="compare" aria-pressed="true">
+                  <span class="pill-title">三選項比較</span>
+                  <span class="pill-sub">3×3 張 · 方向評估</span>
+                </button>
+                <button class="mode-pill" type="button" data-mode="five" aria-pressed="false">
+                  <span class="pill-title">單一問題</span>
+                  <span class="pill-sub">5 張 · 脈絡梳理</span>
+                </button>
+                <button class="mode-pill" type="button" data-mode="nine" aria-pressed="false">
+                  <span class="pill-title">九宮格全景</span>
+                  <span class="pill-sub">3×3 · 深度探索</span>
+                </button>
+              </div>
+              <input id="readingMode" type="hidden" value="compare" />
+            </div>
 
-    const modeSelect = document.getElementById("readingMode");
-    const optionsContainer = document.getElementById("optionInputs");
-    const questionInput = document.getElementById("question");
-    const questionResult = document.getElementById("questionResult");
-    const resultsContainer = document.getElementById("results");
-    const drawButton = document.getElementById("drawButton");
-    const optionInputs = [
-      document.getElementById("option1"),
-      document.getElementById("option2"),
-      document.getElementById("option3")
-    ];
+            <div class="field-group">
+              <label class="field-label" for="question">你的問題 <span class="label-hint">（選填，按 Enter 可直接抽牌）</span></label>
+              <input id="question" type="text" maxlength="200" placeholder="例如：我該如何規劃接下來的工作與生活節奏？" />
+            </div>
 
-    function drawCards(count) {
-      const shuffled = [...deck];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-      return shuffled.slice(0, count);
-    }
+            <div id="optionInputs" class="option-inputs">
+              <label for="option1">
+                <span>情境一</span>
+                <input id="option1" type="text" maxlength="60" placeholder="例如：接受新的工作機會" />
+              </label>
+              <label for="option2">
+                <span>情境二</span>
+                <input id="option2" type="text" maxlength="60" placeholder="例如：留在目前的工作" />
+              </label>
+              <label for="option3">
+                <span>情境三 <span class="label-hint">（可留空）</span></span>
+                <input id="option3" type="text" maxlength="60" placeholder="例如：暫緩決定先休息調整" />
+              </label>
+            </div>
 
-    function createCardElement(card, position) {
-      const article = document.createElement("article");
-      article.className = "card";
+            <div class="form-actions">
+              <button id="drawButton" class="btn-primary" type="submit">開始抽牌</button>
+              <button id="clearButton" class="btn-ghost" type="button" hidden>清空桌面</button>
+            </div>
+          </form>
 
-      const positionLabel = document.createElement("div");
-      positionLabel.className = "position";
-      positionLabel.textContent = `${position.name}｜${position.prompt}`;
+          <div id="resultToolbar" class="result-toolbar" hidden>
+            <p id="questionResult" class="question-result" aria-live="polite"></p>
+            <div class="toolbar-actions">
+              <button id="revealAllButton" class="btn-secondary" type="button">全部翻開</button>
+              <button id="copyTextButton" class="btn-secondary" type="button">複製解讀</button>
+              <button id="copyLinkButton" class="btn-secondary" type="button">分享連結</button>
+            </div>
+          </div>
 
-      const symbol = document.createElement("div");
-      symbol.className = "card-symbol";
-      symbol.setAttribute("aria-hidden", "true");
-      symbol.textContent = card.symbol;
+          <div id="results" class="results-stage"></div>
+        </section>
+      </section>
 
-      const heading = document.createElement("h3");
-      heading.textContent = `${String(card.number).padStart(2, "0")}．${card.name}`;
+      <!-- VIEW 2: 36-CARD LIBRARY -->
+      <section id="view-library" class="view-section" role="tabpanel" hidden>
+        <header class="intro">
+          <h2>三十六張雷諾曼｜牌義圖鑑</h2>
+          <p>瀏覽完整牌組的象徵意涵、屬性傾向與日常提醒，作為自我探索與解牌對照。</p>
+        </header>
 
-      const meaning = document.createElement("p");
-      meaning.textContent = card.meaning;
+        <section class="panel">
+          <div class="library-controls">
+            <input id="librarySearch" type="search" placeholder="搜尋牌名、編號或關鍵字（例如：太陽、溝通、16）..." aria-label="搜尋牌義" />
+            <div class="filter-pills" role="group" aria-label="依屬性篩選">
+              <button class="filter-pill is-active" type="button" data-filter="all">全部 (36)</button>
+              <button class="filter-pill" type="button" data-filter="positive">順流</button>
+              <button class="filter-pill" type="button" data-filter="neutral">平衡</button>
+              <button class="filter-pill" type="button" data-filter="caution">覺察</button>
+            </div>
+          </div>
+          <div id="libraryGrid" class="library-grid"></div>
+        </section>
+      </section>
 
-      const advice = document.createElement("p");
-      advice.textContent = `提醒：${card.advice}`;
+      <!-- VIEW 3: HISTORY -->
+      <section id="view-history" class="view-section" role="tabpanel" hidden>
+        <header class="intro">
+          <h2>占卜紀錄</h2>
+          <p>系統會在您的瀏覽器本機保存最近 15 次抽牌結果，隨時可重新檢視或清除。</p>
+        </header>
 
-      article.append(positionLabel, symbol, heading, meaning, advice);
-      return article;
-    }
+        <section class="panel">
+          <div class="history-header">
+            <span id="historySummary" class="history-summary">尚未有占卜紀錄</span>
+            <button id="clearHistoryButton" class="btn-ghost" type="button" hidden>清除全部紀錄</button>
+          </div>
+          <div id="historyList" class="history-list"></div>
+        </section>
+      </section>
 
-    function buildNarrative(cards) {
-      if (cards.length === 3) {
-        const [start, develop, outcome] = cards;
-        return [
-          `這個情境像一段正在展開的旅程：起初，「${start.name}」帶來${start.meaning}`,
-          `接著，「${develop.name}」讓事情進入新的發展，提醒你${develop.advice}`,
-          `最後，「${outcome.name}」呈現可能的走向——${outcome.meaning}`,
-          `整體來看，這不是注定的結果，而是邀請你${outcome.advice.toLowerCase()}。`
-        ].join(" ");
-      }
+      <footer class="site-footer">
+        <p class="note">牌面解讀是象徵性的參考，適合用來整理想法與自我探索，不代表確定的結果。</p>
+        <p class="copyright">玥珩 Haven Lenormand · Crafted for quiet clarity</p>
+      </footer>
+    </main>
+  </div>
 
-      const [background, present, challenge, guidance, outcome] = cards;
-      return [
-        `這件事的背景先由「${background.name}」帶出：${background.meaning}`,
-        `回到現在，「${present.name}」描繪出你正在經歷的核心狀態：${present.meaning}`,
-        `往前走時，「${challenge.name}」可能帶來需要面對的轉折：${challenge.meaning}`,
-        `此時「${guidance.name}」像一盞提醒方向的燈，建議你${guidance.advice.toLowerCase()}`,
-        `若沿著目前方向前進，「${outcome.name}」呈現的可能趨勢是${outcome.meaning}`
-      ].join(" ");
-    }
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
-    function createSpread(title, cards, positions) {
-      const section = document.createElement("section");
-      section.className = "spread-block";
-
-      const heading = document.createElement("h2");
-      heading.textContent = title;
-
-      const storyLabel = document.createElement("p");
-      storyLabel.className = "spread-summary";
-      storyLabel.textContent = buildNarrative(cards);
-
-      const grid = document.createElement("div");
-      grid.className = "cards";
-
-      cards.forEach((card, index) => {
-        grid.appendChild(createCardElement(card, positions[index]));
-      });
-
-      section.append(heading, storyLabel, grid);
-      return section;
-    }
-
-    optionsContainer.hidden = modeSelect.value !== "compare";
-
-    modeSelect.addEventListener("change", () => {
-      optionsContainer.hidden = modeSelect.value !== "compare";
-    });
-
-    drawButton.addEventListener("click", () => {
-      const question = questionInput.value.trim();
-      questionResult.textContent = question
-        ? `你的問題：「${question}」以下牌面提供思考參考。`
-        : "你沒有輸入問題；以下牌面可作為一般性的自我探索參考。";
-
-      resultsContainer.replaceChildren();
-
-      if (modeSelect.value === "compare") {
-        const cards = drawCards(9);
-        optionInputs.forEach((input, index) => {
-          const title = input.value.trim() || `情境 ${index + 1}`;
-          resultsContainer.appendChild(
-            createSpread(title, cards.slice(index * 3, index * 3 + 3), comparePositions)
-          );
-        });
-      } else {
-        resultsContainer.appendChild(
-          createSpread("單一問題｜五張牌", drawCards(5), fiveCardPositions)
-        );
-      }
-    });
-  </script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

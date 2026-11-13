@@ -28,6 +28,7 @@
       <div class="nav-tabs" role="tablist" aria-label="功能切換">
         <button class="nav-tab is-active" type="button" role="tab" aria-selected="true" data-view="reading">雷諾曼占卜</button>
         <button class="nav-tab" type="button" role="tab" aria-selected="false" data-view="ziwei">紫微斗數</button>
+        <button class="nav-tab" type="button" role="tab" aria-selected="false" data-view="iching">周易易占</button>
         <button class="nav-tab" type="button" role="tab" aria-selected="false" data-view="library">牌義圖鑑</button>
         <button class="nav-tab" type="button" role="tab" aria-selected="false" data-view="history">
           占卜紀錄 <span id="historyCount" class="badge-count" hidden>0</span>
@@ -279,7 +280,111 @@
         </section>
       </section>
 
-      <!-- VIEW 2: 36-CARD LIBRARY -->
+      <!-- VIEW 3: I CHING (周易易占) -->
+      <section id="view-iching" class="view-section" role="tabpanel" hidden>
+        <header class="intro">
+          <h2>周易｜易經占卜</h2>
+          <p>剛柔相推而生變化。誠心默念所惑之事，透過三枚銅錢或心念之數感應天地之動靜。</p>
+        </header>
+
+        <section class="panel" aria-label="易經占卜設定">
+          <form id="ichingForm" novalidate>
+            <div class="field-group">
+              <label class="field-label" for="ichingQuestion">求問事項 <span class="label-hint">（選填，誠心專注一事）</span></label>
+              <input id="ichingQuestion" type="text" maxlength="200" placeholder="例如：近期在工作轉職與團隊合作上，有何時機指引？" />
+            </div>
+
+            <div class="field-group">
+              <span class="field-label">起卦方式</span>
+              <div class="draw-method-pills" role="radiogroup" aria-label="起卦方式">
+                <button class="draw-method-pill is-active" type="button" data-iching-method="coins" aria-pressed="true">
+                  <span>古法三錢搖卦（逐爻生發）</span>
+                </button>
+                <button class="draw-method-pill" type="button" data-iching-method="plum" aria-pressed="false">
+                  <span>梅花易數（心念三數）</span>
+                </button>
+              </div>
+              <input id="ichingMethod" type="hidden" value="coins" />
+            </div>
+
+            <div id="ichingNumInputs" class="iching-num-grid" hidden>
+              <div class="field-group">
+                <label class="field-label" for="ichingNum1">第一數（上卦）</label>
+                <input id="ichingNum1" type="number" min="1" max="999" value="7" />
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="ichingNum2">第二數（下卦）</label>
+                <input id="ichingNum2" type="number" min="1" max="999" value="8" />
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="ichingNum3">第三數（動爻）</label>
+                <input id="ichingNum3" type="number" min="1" max="999" value="9" />
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button id="ichingDrawButton" class="btn-primary" type="submit">開始擲銅錢起卦</button>
+              <button id="ichingQuickCastButton" class="btn-secondary" type="button">瞬間機感起卦</button>
+            </div>
+          </form>
+
+          <!-- Interactive Coin Toss Stage -->
+          <div id="ichingCoinStage" class="iching-coin-stage" hidden>
+            <div class="iching-coin-header">
+              <div class="iching-coin-info">
+                <span class="iching-coin-title">✦ 靜心搖卦 · 誠意正心</span>
+                <span id="ichingTossHint" class="iching-coin-hint">請心念問題，點擊「搖擲銅錢」以產生第 1 爻（初爻）</span>
+              </div>
+              <div class="iching-coin-actions">
+                <button id="ichingCoinAutoBtn" class="btn-secondary" type="button">連續搖完剩餘爻</button>
+                <button id="ichingCoinCancelBtn" class="btn-ghost" type="button">取消</button>
+              </div>
+            </div>
+
+            <div class="iching-coin-display">
+              <div id="ichingCoins" class="iching-coins-wrapper">
+                <div class="iching-coin coin--head">乾</div>
+                <div class="iching-coin coin--head">乾</div>
+                <div class="iching-coin coin--tail">通</div>
+              </div>
+              <button id="ichingTossCoinBtn" class="btn-primary btn-toss" type="button">搖擲銅錢</button>
+            </div>
+
+            <div class="iching-lines-preview">
+              <span class="iching-lines-title">卦象生成進度（由下往上生發）：</span>
+              <div id="ichingLinesHistory" class="iching-lines-history"></div>
+            </div>
+          </div>
+
+          <!-- Result Stage -->
+          <div id="ichingResultStage" class="iching-result-stage" hidden>
+            <div class="result-toolbar">
+              <p id="ichingCurrentQuestion" class="question-result"></p>
+              <div class="toolbar-actions">
+                <button id="ichingCopyAiBtn" class="btn-primary zw-ai-btn" type="button">複製 AI 深度解卦指令</button>
+                <button id="ichingCopySummaryBtn" class="btn-secondary" type="button">複製卦象摘要</button>
+              </div>
+            </div>
+
+            <div class="iching-hex-dual">
+              <div id="ichingOriginalHex" class="hex-card"></div>
+              <div id="ichingTransformedHex" class="hex-card" hidden></div>
+            </div>
+
+            <div id="ichingChangingLines" class="iching-changing-box" hidden></div>
+
+            <div class="iching-reading-card">
+              <div class="zw-reading-card-head">
+                <h4>卦辭解讀與處事心法</h4>
+                <span class="zw-reading-badge">周易智慧</span>
+              </div>
+              <div id="ichingReadingText" class="iching-reading-text"></div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- VIEW 4: 36-CARD LIBRARY -->
       <section id="view-library" class="view-section" role="tabpanel" hidden>
         <header class="intro">
           <h2>三十六張雷諾曼｜牌義圖鑑</h2>

@@ -1909,3 +1909,411 @@ button:focus-visible {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================================
+   I CHING (周易易經占卜) STYLES
+   ========================================================= */
+
+.iching-num-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.iching-num-grid[hidden] {
+  display: none;
+}
+
+/* Coin Toss Stage */
+.iching-coin-stage {
+  margin-top: 24px;
+  padding: 24px;
+  border: 1px solid var(--gold-soft);
+  border-radius: 24px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow);
+}
+
+.iching-coin-stage[hidden] {
+  display: none;
+}
+
+.iching-coin-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.iching-coin-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.iching-coin-title {
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.iching-coin-hint {
+  color: var(--text-heading);
+  font-size: 0.94rem;
+  font-weight: 600;
+}
+
+.iching-coin-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.iching-coin-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  margin: 24px 0 20px;
+}
+
+.iching-coins-wrapper {
+  display: flex;
+  gap: 18px;
+}
+
+.iching-coin {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 2px solid #b89758;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #fffdf8;
+  position: relative;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25), inset 0 0 10px rgba(0, 0, 0, 0.4);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.coin--head {
+  background: radial-gradient(circle, #d4b26f 0%, #9e7d38 100%);
+}
+
+.coin--tail {
+  background: radial-gradient(circle, #7e9482 0%, #4a5e4e 100%);
+}
+
+.iching-coin::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  border-radius: 3px;
+}
+
+.btn-toss {
+  min-width: 160px;
+  font-size: 1.05rem;
+  padding: 12px 28px;
+}
+
+/* Lines preview while tossing */
+.iching-lines-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.iching-lines-title {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.iching-lines-history {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: min(340px, 100%);
+}
+
+.iching-line-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.iching-line-row.is-current {
+  background: var(--bg-subtle);
+  border: 1px dashed var(--gold);
+}
+
+.iching-line-label {
+  font-size: 0.82rem;
+  color: var(--muted);
+  width: 36px;
+}
+
+.iching-line-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 18px;
+}
+
+.line--yang .yang-bar {
+  width: 100%;
+  height: 10px;
+  background: var(--gold);
+  border-radius: 4px;
+}
+
+.line--yin {
+  justify-content: space-between;
+}
+
+.line--yin .yin-part {
+  width: 44%;
+  height: 10px;
+  background: var(--sage);
+  border-radius: 4px;
+}
+
+.line--empty {
+  font-size: 0.78rem;
+  color: var(--muted);
+  justify-content: center;
+}
+
+.changing-tag {
+  color: #d9483b;
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+/* Result Stage: Dual Hexagrams */
+.iching-result-stage {
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.iching-result-stage[hidden] {
+  display: none;
+}
+
+.iching-hex-dual {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.hex-card {
+  padding: 22px 24px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+}
+
+.hex-box-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.hex-type-badge {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--bg-subtle);
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.hex-type-badge--trans {
+  color: var(--sage-strong);
+}
+
+.hex-box-head h4 {
+  margin: 4px 0 0;
+  color: var(--text-heading);
+  font-family: var(--font-serif);
+  font-size: 1.45rem;
+  font-weight: 600;
+}
+
+.hex-sub {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+.hex-lines-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.hex-line-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.hex-pos-text {
+  font-size: 0.84rem;
+  color: var(--muted);
+  width: 40px;
+}
+
+.hex-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 20px;
+}
+
+.hex-bar--yang .yang-segment {
+  width: 100%;
+  height: 12px;
+  background: #a9894f;
+  border-radius: 4px;
+}
+
+[data-theme="dark"] .hex-bar--yang .yang-segment {
+  background: #d4b679;
+}
+
+.hex-bar--yin {
+  justify-content: space-between;
+}
+
+.hex-bar--yin .yin-segment {
+  width: 44%;
+  height: 12px;
+  background: #6f8470;
+  border-radius: 4px;
+}
+
+[data-theme="dark"] .hex-bar--yin .yin-segment {
+  background: #8da690;
+}
+
+.is-changing-line {
+  filter: drop-shadow(0 0 6px rgba(217, 72, 59, 0.65));
+}
+
+.is-changing-line .yang-segment,
+.is-changing-line .yin-segment {
+  border: 1.5px solid #d9483b;
+}
+
+.change-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #d9483b;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+/* Changing Lines Interpretation Box */
+.iching-changing-box {
+  margin-top: 18px;
+  padding: 18px 22px;
+  border: 1px solid var(--gold-soft);
+  border-radius: 18px;
+  background: var(--bg-subtle);
+}
+
+.iching-changing-box[hidden] {
+  display: none;
+}
+
+.iching-changing-box h5 {
+  margin: 0 0 12px;
+  color: var(--gold);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.changing-lines-list {
+  display: grid;
+  gap: 10px;
+}
+
+.changing-line-item {
+  color: var(--text);
+  font-size: 0.94rem;
+  line-height: 1.65;
+}
+
+.changing-line-item strong {
+  color: #d9483b;
+  margin-right: 6px;
+}
+
+/* Reading Card */
+.iching-reading-card {
+  margin-top: 18px;
+  padding: 22px 24px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg-card);
+  box-shadow: var(--shadow-card);
+}
+
+.iching-reading-text p {
+  margin: 0 0 12px;
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.8;
+}
+
+.iching-reading-text p:last-child {
+  margin-bottom: 0;
+}
+
+.iching-quote-p {
+  color: var(--sage-strong) !important;
+  font-family: var(--font-serif);
+  font-size: 1.05rem !important;
+  padding: 8px 14px;
+  border-left: 3px solid var(--sage);
+  background: var(--bg-subtle);
+  border-radius: 0 8px 8px 0;
+}
+
+.iching-adv-p {
+  padding: 10px 14px;
+  border-left: 3px solid var(--gold);
+  background: var(--bg-subtle);
+  border-radius: 0 8px 8px 0;
+  color: var(--text-heading) !important;
+  font-weight: 500;
+}

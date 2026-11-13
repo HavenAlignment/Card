@@ -1,6 +1,7 @@
 import { DECK, POLARITY_META, SPREAD_POSITIONS } from "./data/deck.js";
 import { CARD_ICONS } from "./data/icons.js";
 import { initZiwei } from "./ziwei.js";
+import { initIching } from "./iching.js";
 
 const STORAGE_KEYS = {
   theme: "haven_lenormand_theme",
@@ -14,6 +15,7 @@ const navTabs = document.querySelectorAll(".nav-tab");
 const viewSections = {
   reading: document.getElementById("view-reading"),
   ziwei: document.getElementById("view-ziwei"),
+  iching: document.getElementById("view-iching"),
   library: document.getElementById("view-library"),
   history: document.getElementById("view-history")
 };
@@ -1104,6 +1106,7 @@ initTheme();
 updateHistoryBadge();
 renderLibrary();
 initZiwei(showToast);
+initIching(showToast);
 if (!tryLoadFromUrl()) {
   setMode("five");
 }

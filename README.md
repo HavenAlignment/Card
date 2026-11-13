@@ -10,6 +10,7 @@
 [![Zero Build](https://img.shields.io/badge/Architecture-Vanilla%20ES%20Modules-a9894f?style=for-the-badge&logo=javascript&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
 [![Lenormand](https://img.shields.io/badge/Lenormand-36%20SVG%20Cards-6f8470?style=for-the-badge)](https://havenalignment.github.io/Card/)
 [![Zi Wei](https://img.shields.io/badge/Zi%20Wei-iztro%202.6.5-38bdf8?style=for-the-badge)](https://github.com/SylarLong/iztro)
+[![I Ching](https://img.shields.io/badge/I%20Ching-64%20Hexagrams-d97706?style=for-the-badge)](https://havenalignment.github.io/Card/)
 [![Last Commit](https://img.shields.io/github/last-commit/HavenAlignment/Card?style=for-the-badge&color=4b5f4f)](https://github.com/HavenAlignment/Card/commits/main)
 
 </div>
@@ -55,7 +56,18 @@
   - **一鍵複製 AI 深度解盤指令**：根據目前選擇的視角（本命／大限／流年），自動生成結構化 Prompt，一鍵貼給 ChatGPT、Gemini 或 Claude 進行更深入的問事對話。
 - **高解析度圖檔匯出**：支援一鍵匯出 2× Retina 解析度的 `<暱稱>-紫微命盤.png`（流年模式下自動標註年份）。
 
-### 三、 雙主題與響應式設計
+### 三、 周易易經占卜（I Ching）
+- **多重經典起卦法**：
+  - **古法三錢搖卦**：三枚雙面銅錢（字/面）互動擲爻，由下至上（初爻至上爻）實時推演老少陰陽，標註動爻變化。
+  - **梅花易數（心念三數）**：輸入三個直覺數字，依卦數推演上卦、下卦與動爻。
+  - **瞬間機感起卦**：以密碼學隨機數即刻捕捉當下機變。
+- **本卦與之卦雙卦對照**：
+  - 同時呈現「本卦 · 當前處境」與「之卦 · 未來走向」，動爻帶有光暈與「動」字標記。
+  - **焦點動爻解析**：深度剖析動爻之爻辭原文與轉折關鍵。
+  - **處事錦囊與象傳心法**：結合大象傳天地之道，給予溫暖有方向的具體處世行動準則。
+  - **一鍵複製 AI 深度解卦指令**：整理為結構化 Prompt，貼給 AI 針對特定問題深入探討。
+
+### 四、 雙主題與響應式設計
 - 內建**日間溫潤米白**與**夜間靜謐深色**雙主題切換（自動記憶於 `localStorage`）。
 - 全部 DOM 渲染採 `document.createElement` 與 `textContent`，杜絕 XSS 風險；尊重系統 `prefers-reduced-motion` 設定。
 

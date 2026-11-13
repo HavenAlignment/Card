@@ -8,12 +8,14 @@ import {
 
 const BRANCH_ORDER = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
 
-function findPalace(chart, name) {
+export const MUTAGEN_SYMBOLS = ["祿", "權", "科", "忌"];
+
+export function findPalace(chart, name) {
   const short = name === "命宮" ? "命宮" : name.replace(/宮$/, "");
   return chart.palaces.find((p) => p.name === name || p.name === short || `${p.name}宮` === name) || null;
 }
 
-function getPalaceTheme(name) {
+export function getPalaceTheme(name) {
   return PALACE_THEMES[name] || PALACE_THEMES[`${name}宮`] || name;
 }
 
@@ -54,10 +56,10 @@ function brightnessNote(stars) {
   return notes.join("；");
 }
 
-function getCurrentNominalAge(chart) {
+export function getCurrentNominalAge(chart, targetYear = new Date().getFullYear()) {
   const solarYear = Number.parseInt(String(chart.solarDate || "").split("-")[0], 10);
   if (!Number.isInteger(solarYear)) return null;
-  return new Date().getFullYear() - solarYear + 1;
+  return targetYear - solarYear + 1;
 }
 
 function createReadingBlock(title, badgeText) {
@@ -82,14 +84,15 @@ function createReadingBlock(title, badgeText) {
   return card;
 }
 
-export function renderZiweiReading(container, chart, meta) {
+export function renderZiweiReading(container, chart, meta, { scope = "origin", targetYear = new Date().getFullYear(), horoscope = null } = {}) {
   container.replaceChildren();
 
   const soulPalace = chart.palaces.find((p) => p.name === "命宮");
   const bodyPalace = chart.palaces.find((p) => p.isBodyPalace);
+  const currentAge = getCurrentNominalAge(chart, targetYear);
 
-  // 1. 命宮與身宮核心氣質
-  if (soulPalace) {
+  // 1. 本命核心氣質（本命或大限盤皆顯示）
+  if (soulPalace && scope !== "yearly") {
     const { stars, borrowedFrom } = getEffectiveMajorStars(chart, soulPalace);
     const starNames = stars.map((s) => s.name).join("、") || "空宮";
     const card = createReadingBlock(
@@ -149,49 +152,123 @@ export function renderZiweiReading(container, chart, meta) {
     container.appendChild(card);
   }
 
-  // 2. 生年四化落宮密碼
-  const sihuaHits = [];
-  chart.palaces.forEach((palace) => {
-    [...palace.majorStars, ...palace.minorStars].forEach((star) => {
-      if (star.mutagen && MUTAGEN_MEANINGS[star.mutagen]) {
-        sihuaHits.push({
-          mutagen: star.mutagen,
-          starName: star.name,
-          palaceName: palace.name
-        });
+  // 2. 當前十年大限（若在 decadal 或 origin 模式下顯示）
+  if (currentAge !== null) {
+    const activeDecadal = chart.palaces.find(
+      (p) => p.decadal?.range && currentAge >= p.decadal.range[0] && currentAge <= p.decadal.range[1]
+    );
+    if (activeDecadal) {
+      const decCard = createReadingBlock(
+        scope === "decadal" ? "當前十年大限深入解析" : "當前十年大限重心",
+        `虛歲 ${currentAge} 歲 · ${activeDecadal.decadal.range[0]}~${activeDecadal.decadal.range[1]} 歲大限`
+      );
+      const { stars } = getEffectiveMajorStars(chart, activeDecadal);
+      const starText = stars.map((s) => s.name).join("、") || "空宮";
+      const p = document.createElement("p");
+      p.textContent = `目前正行經本命「${activeDecadal.name}」（${activeDecadal.heavenlyStem}${activeDecadal.earthlyBranch}，主星：${starText}），這十年的生命舞台與重要功課主要圍繞在「${getPalaceTheme(activeDecadal.name)}」。`;
+      decCard.appendChild(p);
+
+      if (scope === "decadal") {
+        const pSub = document.createElement("p");
+        pSub.className = "zw-reading-sub";
+        pSub.textContent = `在大限盤中，此宮位成為大限的「大限命宮」，以此為基準重新定出十年的人生舞台、財富、事業與人際走向。`;
+        decCard.appendChild(pSub);
       }
-    });
-  });
 
-  if (sihuaHits.length) {
-    const order = ["祿", "權", "科", "忌"];
-    sihuaHits.sort((a, b) => order.indexOf(a.mutagen) - order.indexOf(b.mutagen));
-
-    const sihuaCard = createReadingBlock("生年四化落宮密碼", "全盤能量焦點");
-    const list = document.createElement("ul");
-    list.className = "zw-sihua-list";
-
-    sihuaHits.forEach((hit) => {
-      const li = document.createElement("li");
-      const metaInfo = MUTAGEN_MEANINGS[hit.mutagen];
-      const theme = getPalaceTheme(hit.palaceName);
-      li.textContent = `${metaInfo.title} — ${hit.starName}化${hit.mutagen} 落「${hit.palaceName}」：${metaInfo.desc}；此能量主要展現在${theme}。`;
-      list.appendChild(li);
-    });
-
-    sihuaCard.appendChild(list);
-    container.appendChild(sihuaCard);
+      container.appendChild(decCard);
+    }
   }
 
-  // 3. 四大領域速覽（官祿、財帛、夫妻、福德）
+  // 3. 流年專題解析（若在 yearly 模式或有 horoscope 物件）
+  if (scope === "yearly" && horoscope?.yearly) {
+    const yr = horoscope.yearly;
+    const yrYearStr = `${targetYear}（${yr.heavenlyStem}${yr.earthlyBranch}年）`;
+    const yrLifeBranch = yr.earthlyBranch;
+    const yrLifePalace = chart.palaces.find((p) => p.earthlyBranch === yrLifeBranch);
+
+    const yrCard = createReadingBlock(
+      `流年運勢總覽 · ${yrYearStr}`,
+      `流年命宮落在「${yrLifePalace ? yrLifePalace.name : yrLifeBranch}」`
+    );
+
+    const p1 = document.createElement("p");
+    p1.textContent = `${targetYear} 年為【${yr.heavenlyStem}${yr.earthlyBranch}年】，流年命宮位於地支【${yrLifeBranch}】（本命「${yrLifePalace?.name || yrLifeBranch}」）。今年的個人心態、行動力與外在機遇，將深受該宮星曜能量影響。`;
+    yrCard.appendChild(p1);
+
+    if (Array.isArray(yr.mutagen) && yr.mutagen.length === 4) {
+      const pSihuaTitle = document.createElement("p");
+      pSihuaTitle.style.fontWeight = "600";
+      pSihuaTitle.style.marginTop = "12px";
+      pSihuaTitle.textContent = `【${yr.heavenlyStem}干流年四化動能】`;
+      yrCard.appendChild(pSihuaTitle);
+
+      const ul = document.createElement("ul");
+      ul.className = "zw-sihua-list";
+      const descriptions = [
+        "順流之處、賺錢契機與最容易得到資源的助力所在",
+        "企圖心爆發、必須主動掌控、承擔責任與推動計畫的焦點",
+        "才華受矚目、名譽加分、考試進修或貴人化解危機的領域",
+        "最容易感到執著、考驗、情緒波動或需要特別細心維護的功課"
+      ];
+
+      MUTAGEN_SYMBOLS.forEach((sym, idx) => {
+        const star = yr.mutagen[idx];
+        const hitPalace = chart.palaces.find((p) => p.majorStars.some((s) => s.name === star) || p.minorStars.some((s) => s.name === star));
+        const li = document.createElement("li");
+        li.textContent = `流年化${sym}【${star}】${hitPalace ? `（落本命「${hitPalace.name}」）` : ""}：${descriptions[idx]}。`;
+        ul.appendChild(li);
+      });
+      yrCard.appendChild(ul);
+    }
+
+    container.appendChild(yrCard);
+  }
+
+  // 4. 生年四化落宮密碼（本命與大限模式）
+  if (scope !== "yearly") {
+    const sihuaHits = [];
+    chart.palaces.forEach((palace) => {
+      [...palace.majorStars, ...palace.minorStars].forEach((star) => {
+        if (star.mutagen && MUTAGEN_MEANINGS[star.mutagen]) {
+          sihuaHits.push({
+            mutagen: star.mutagen,
+            starName: star.name,
+            palaceName: palace.name
+          });
+        }
+      });
+    });
+
+    if (sihuaHits.length) {
+      const order = ["祿", "權", "科", "忌"];
+      sihuaHits.sort((a, b) => order.indexOf(a.mutagen) - order.indexOf(b.mutagen));
+
+      const sihuaCard = createReadingBlock("生年四化落宮密碼", "全盤能量焦點");
+      const list = document.createElement("ul");
+      list.className = "zw-sihua-list";
+
+      sihuaHits.forEach((hit) => {
+        const li = document.createElement("li");
+        const metaInfo = MUTAGEN_MEANINGS[hit.mutagen];
+        const theme = getPalaceTheme(hit.palaceName);
+        li.textContent = `${metaInfo.title} — ${hit.starName}化${hit.mutagen} 落「${hit.palaceName}」：${metaInfo.desc}；此能量主要展現在${theme}。`;
+        list.appendChild(li);
+      });
+
+      sihuaCard.appendChild(list);
+      container.appendChild(sihuaCard);
+    }
+  }
+
+  // 5. 四大領域速覽（官祿、財帛、夫妻、福德）
   const domainGrid = document.createElement("div");
   domainGrid.className = "zw-domain-grid";
 
   const domains = [
-    { palaceName: "官祿宮", label: "事業與工作", field: "career" },
-    { palaceName: "財帛宮", label: "財富與資源", field: "wealth" },
-    { palaceName: "夫妻宮", label: "感情與合作", field: "love" },
-    { palaceName: "福德宮", label: "心境與精神", field: "fortune" }
+    { palaceName: "官祿宮", label: scope === "yearly" ? "流年工作與事業" : "事業與工作", field: "career" },
+    { palaceName: "財帛宮", label: scope === "yearly" ? "流年財務與收穫" : "財富與資源", field: "wealth" },
+    { palaceName: "夫妻宮", label: scope === "yearly" ? "流年感情與合作" : "感情與合作", field: "love" },
+    { palaceName: "福德宮", label: scope === "yearly" ? "流年心境與能量" : "心境與精神", field: "fortune" }
   ];
 
   domains.forEach(({ palaceName, label, field }) => {
@@ -199,7 +276,7 @@ export function renderZiweiReading(container, chart, meta) {
     if (!palace) return;
     const { stars, borrowedFrom } = getEffectiveMajorStars(chart, palace);
     const starLabel = stars.map((s) => s.name).join("、") || "空宮";
-    const card = createReadingBlock(label, `${palaceName} · ${starLabel}`);
+    const card = createReadingBlock(label, `${palace.name} · ${starLabel}`);
 
     if (borrowedFrom) {
       const note = document.createElement("p");
@@ -232,33 +309,15 @@ export function renderZiweiReading(container, chart, meta) {
   });
 
   container.appendChild(domainGrid);
-
-  // 4. 當前十年大限
-  const age = getCurrentNominalAge(chart);
-  if (age !== null) {
-    const activeDecadal = chart.palaces.find(
-      (p) => p.decadal?.range && age >= p.decadal.range[0] && age <= p.decadal.range[1]
-    );
-    if (activeDecadal) {
-      const decCard = createReadingBlock(
-        "當前十年大限重心",
-        `虛歲 ${age} 歲 · ${activeDecadal.decadal.range[0]}~${activeDecadal.decadal.range[1]} 歲`
-      );
-      const { stars } = getEffectiveMajorStars(chart, activeDecadal);
-      const starText = stars.map((s) => s.name).join("、") || "空宮";
-      const p = document.createElement("p");
-      p.textContent = `目前正行經本命「${activeDecadal.name}」（${activeDecadal.heavenlyStem}${activeDecadal.earthlyBranch}，主星：${starText}），這十年的生命舞台與學習焦點會圍繞在「${getPalaceTheme(activeDecadal.name)}」。`;
-      decCard.appendChild(p);
-      container.appendChild(decCard);
-    }
-  }
 }
 
-export function buildZiweiAiPrompt(chart, meta) {
-  const age = getCurrentNominalAge(chart);
+export function buildZiweiAiPrompt(chart, meta, { scope = "origin", targetYear = new Date().getFullYear(), horoscope = null } = {}) {
+  const age = getCurrentNominalAge(chart, targetYear);
   const activeDecadal = age !== null
     ? chart.palaces.find((p) => p.decadal?.range && age >= p.decadal.range[0] && age <= p.decadal.range[1])
     : null;
+
+  const yr = horoscope?.yearly;
 
   const lines = [
     "請你扮演一位專業、溫潤且具建設性的紫微斗數命理顧問，幫我深度解析以下這張紫微斗數命盤：",
@@ -271,11 +330,15 @@ export function buildZiweiAiPrompt(chart, meta) {
     `- 農曆：${chart.lunarDate}`,
     `- 四柱八字：${chart.chineseDate}`,
     `- 命主：${chart.soul}｜身主：${chart.body}`,
+    `- 當前剖析視角：${scope === "yearly" ? `【流年盤】聚焦 ${targetYear}（${yr?.heavenlyStem || ""}${yr?.earthlyBranch || ""}年）` : scope === "decadal" ? "【大限盤】十年大限焦點" : "【本命盤】全盤性格與格局"}`,
     age !== null && activeDecadal
-      ? `- 目前虛歲：約 ${age} 歲（正走 ${activeDecadal.decadal.range[0]}~${activeDecadal.decadal.range[1]} 歲大限，大命在本命「${activeDecadal.name}」）`
+      ? `- 虛歲歲數：約 ${age} 歲（正行經 ${activeDecadal.decadal.range[0]}~${activeDecadal.decadal.range[1]} 歲大限，大命在本命「${activeDecadal.name}」）`
+      : "",
+    yr
+      ? `- ${targetYear} 流年干支：${yr.heavenlyStem}${yr.earthlyBranch}年，流年命宮在【${yr.earthlyBranch}宮】，流年四化：${yr.mutagen?.[0]}化祿、${yr.mutagen?.[1]}化權、${yr.mutagen?.[2]}化科、${yr.mutagen?.[3]}化忌`
       : "",
     "",
-    "【十二宮完整星曜配置】"
+    "【十二宮完整星曜配置（本命）】"
   ].filter(Boolean);
 
   chart.palaces.forEach((p) => {
@@ -302,11 +365,9 @@ export function buildZiweiAiPrompt(chart, meta) {
   lines.push(
     "",
     "【我希望你幫我分析的方向】",
-    "1. 命宮三方四正的整體格局、核心天賦與盲點。",
-    "2. 生年四化（祿權科忌）的因果連動，資源與考驗分別在哪裡。",
-    "3. 事業（官祿）與財運（財帛）的適合發展模式。",
-    "4. 感情與人際相處（夫妻／交友）的互動提醒。",
-    "5. 結合我目前的大限階段，未來 1～3 年最值得把握的行動建議。",
+    scope === "yearly"
+      ? `1. ${targetYear}（${yr?.heavenlyStem || ""}${yr?.earthlyBranch || ""}年）流年命盤的整體吉凶趨勢與核心課題。\n2. 流年四化（祿權科忌）與本命星曜疊加引動的吉凶機會。\n3. 今年在工作事業、財務收入、感情人際與健康方面的具體行動指南與避坑提醒。\n4. 未來 12 個月最值得把握的關鍵轉機。`
+      : "1. 命宮三方四正的整體格局、核心天賦與盲點。\n2. 生年四化（祿權科忌）的因果連動，資源與考驗分別在哪裡。\n3. 事業（官祿）與財運（財帛）的適合發展模式。\n4. 感情與人際相處（夫妻／交友）的互動提醒。\n5. 結合我目前的大限階段，未來 1～3 年最值得把握的行動建議。",
     "",
     "（補充：我目前最想問的具體問題是：【可在這裡自行填寫想問的事情】）"
   );

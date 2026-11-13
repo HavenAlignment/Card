@@ -205,6 +205,25 @@
           <p id="zwError" class="zw-error" role="alert" hidden></p>
 
           <div id="zwChartStage" class="zw-chart-stage" hidden>
+            <div class="zw-view-controls">
+              <div class="zw-scope-pills" role="radiogroup" aria-label="排盤視角">
+                <button class="zw-scope-pill is-active" type="button" data-zw-scope="origin" aria-pressed="true">
+                  <span>本命盤</span>
+                </button>
+                <button class="zw-scope-pill" type="button" data-zw-scope="decadal" aria-pressed="false">
+                  <span id="zwDecadalBtnLabel">大限盤</span>
+                </button>
+                <button class="zw-scope-pill" type="button" data-zw-scope="yearly" aria-pressed="false">
+                  <span id="zwYearlyBtnLabel">流年盤</span>
+                </button>
+              </div>
+
+              <div id="zwYearPickerWrap" class="zw-year-picker" hidden>
+                <label for="zwYearSelect">切換年份：</label>
+                <select id="zwYearSelect" aria-label="選擇流年年份"></select>
+              </div>
+            </div>
+
             <p class="zw-hint">提示：點擊任一宮位，可高亮顯示該宮的「三方四正」（對宮與三合宮）並查看星曜詳情。</p>
             <div class="zw-astrolabe-scroll">
               <div id="zwAstrolabe" class="zw-astrolabe" aria-label="紫微斗數十二宮命盤"></div>

@@ -1091,6 +1091,71 @@ button:focus-visible {
   display: none;
 }
 
+/* Scope Pills & Year Switcher (本命 / 大限 / 流年) */
+.zw-view-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.zw-scope-pills {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-subtle);
+}
+
+.zw-scope-pill {
+  padding: 6px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.zw-scope-pill:hover {
+  color: var(--text);
+}
+
+.zw-scope-pill.is-active {
+  background: var(--sage-strong);
+  color: #fffdf8;
+}
+
+[data-theme="dark"] .zw-scope-pill.is-active {
+  color: #121814;
+}
+
+.zw-year-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.88rem;
+  color: var(--text-heading);
+  font-weight: 600;
+}
+
+.zw-year-picker select {
+  min-height: 36px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.88rem;
+}
+
 .zw-hint {
   margin: 0 0 14px;
   color: var(--muted);
@@ -1331,6 +1396,11 @@ button:focus-visible {
   line-height: 1;
 }
 
+.zw-mutagen-box--flow {
+  border: 1px solid #ffffff;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
+}
+
 .mutagen--lu { background: #2f9e5a; }
 .mutagen--quan { background: #9b4dca; }
 .mutagen--ke { background: #2d7dd2; }
@@ -1399,6 +1469,38 @@ button:focus-visible {
   color: #ffffff;
   font-size: 0.66rem;
   font-weight: 700;
+}
+
+.zw-scope-badge {
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.zw-scope-badge--yearly {
+  background: #b45309;
+  color: #fef3c7;
+}
+
+.zw-scope-badge--yearly.is-scope-life {
+  background: #d97706;
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 0 6px rgba(245, 158, 11, 0.6);
+}
+
+.zw-scope-badge--decadal {
+  background: #1e3a8a;
+  color: #dbeafe;
+}
+
+.zw-scope-badge--decadal.is-scope-life {
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.6);
 }
 
 .zw-bot-right {

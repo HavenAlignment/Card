@@ -1,5 +1,10 @@
 import { astro } from "https://cdn.jsdelivr.net/npm/iztro@2.6.5/+esm";
-import { buildZiweiAiPrompt, renderZiweiReading } from "./ziwei-reading.js";
+import {
+  MUTAGEN_SYMBOLS,
+  buildZiweiAiPrompt,
+  getCurrentNominalAge,
+  renderZiweiReading
+} from "./ziwei-reading.js";
 
 const BRANCH_ORDER = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
 
@@ -85,12 +90,22 @@ export function initZiwei(showToast) {
   const readingContentEl = document.getElementById("zwReadingContent");
   const copyAiPromptButton = document.getElementById("zwCopyAiPromptButton");
 
+  const scopePills = chartStage.querySelectorAll(".zw-scope-pill");
+  const yearPickerWrap = document.getElementById("zwYearPickerWrap");
+  const yearSelect = document.getElementById("zwYearSelect");
+  const decadalBtnLabel = document.getElementById("zwDecadalBtnLabel");
+  const yearlyBtnLabel = document.getElementById("zwYearlyBtnLabel");
+
   const genderBtns = form.querySelectorAll("[data-zw-gender]");
   const calendarBtns = form.querySelectorAll("[data-zw-calendar]");
 
   let currentChart = null;
   let currentMeta = null;
+  let currentScope = "origin"; // "origin" | "decadal" | "yearly"
+  let currentTargetYear = new Date().getFullYear();
+  let currentHoroscope = null;
 
+  // Populate Month & Day selects
   for (let m = 1; m <= 12; m++) {
     const opt = document.createElement("option");
     opt.value = String(m);
@@ -132,7 +147,60 @@ export function initZiwei(showToast) {
     });
   });
 
-  function createStarColumn(star, category) {
+  // Populate year select (+/- 5 years around current year)
+  function populateYearSelect(centerYear) {
+    yearSelect.replaceChildren();
+    for (let y = centerYear - 5; y <= centerYear + 5; y++) {
+      const opt = document.createElement("option");
+      opt.value = String(y);
+      opt.textContent = `${y} 年`;
+      if (y === centerYear) opt.selected = true;
+      yearSelect.appendChild(opt);
+    }
+  }
+  populateYearSelect(currentTargetYear);
+
+  yearSelect.addEventListener("change", () => {
+    currentTargetYear = Number.parseInt(yearSelect.value, 10);
+    if (currentChart && currentMeta) {
+      updateHoroscope();
+      renderAll();
+    }
+  });
+
+  scopePills.forEach((pill) => {
+    pill.addEventListener("click", () => {
+      const scope = pill.dataset.zwScope;
+      setScope(scope);
+    });
+  });
+
+  function setScope(scope) {
+    currentScope = scope;
+    scopePills.forEach((p) => {
+      const active = p.dataset.zwScope === scope;
+      p.classList.toggle("is-active", active);
+      p.setAttribute("aria-pressed", String(active));
+    });
+    yearPickerWrap.hidden = scope !== "yearly";
+    if (currentChart && currentMeta) {
+      updateHoroscope();
+      renderAll();
+    }
+  }
+
+  function updateHoroscope() {
+    if (!currentChart?.horoscope) return;
+    try {
+      const dateStr = `${currentTargetYear}-06-15`;
+      currentHoroscope = currentChart.horoscope(dateStr);
+    } catch (e) {
+      console.warn("Horoscope calc note:", e);
+      currentHoroscope = null;
+    }
+  }
+
+  function createStarColumn(star, category, { yearlyMutagen = null } = {}) {
     const col = document.createElement("div");
     let toneClass = category;
     if (category === "minor" && MALEFIC_STARS.has(star.name)) {
@@ -157,8 +225,17 @@ export function initZiwei(showToast) {
     if (star.mutagen) {
       const mutEl = document.createElement("span");
       mutEl.className = `zw-mutagen-box ${MUTAGEN_CLASS[star.mutagen] || ""}`;
+      mutEl.title = `生年化${star.mutagen}`;
       mutEl.textContent = star.mutagen;
       col.appendChild(mutEl);
+    }
+
+    if (yearlyMutagen) {
+      const yrMutEl = document.createElement("span");
+      yrMutEl.className = `zw-mutagen-box zw-mutagen-box--flow ${MUTAGEN_CLASS[yearlyMutagen] || ""}`;
+      yrMutEl.title = `流年化${yearlyMutagen}`;
+      yrMutEl.textContent = yearlyMutagen;
+      col.appendChild(yrMutEl);
     }
 
     return col;
@@ -274,6 +351,24 @@ export function initZiwei(showToast) {
   function renderChart(chart, meta) {
     astrolabeEl.replaceChildren();
 
+    // Map yearly horoscope items
+    const yr = currentHoroscope?.yearly;
+    const dec = currentHoroscope?.decadal;
+    const yearlyMutagenMap = new Map(); // starName -> "祿"|"權"|"科"|"忌"
+    if (yr?.mutagen && Array.isArray(yr.mutagen)) {
+      yr.mutagen.forEach((starName, idx) => {
+        if (starName && MUTAGEN_SYMBOLS[idx]) {
+          yearlyMutagenMap.set(starName, MUTAGEN_SYMBOLS[idx]);
+        }
+      });
+    }
+
+    // Determine Decadal & Yearly focus palaces
+    const currentAge = getCurrentNominalAge(chart, currentTargetYear);
+    const decPalace = currentAge !== null
+      ? chart.palaces.find((p) => p.decadal?.range && currentAge >= p.decadal.range[0] && currentAge <= p.decadal.range[1])
+      : null;
+
     // Center 2x2 Panel
     const center = document.createElement("div");
     center.className = "zw-center";
@@ -298,15 +393,31 @@ export function initZiwei(showToast) {
 
     const topMeta = document.createElement("div");
     topMeta.className = "zw-center-meta";
-    topMeta.textContent = `姓名：${meta.nickname}　${yinYangGender}　${chart.fiveElementsClass}`;
+    const scopeTag = currentScope === "yearly"
+      ? `【${currentTargetYear} ${yr?.heavenlyStem || ""}${yr?.earthlyBranch || ""}流年盤】`
+      : currentScope === "decadal"
+        ? `【${decPalace ? `${decPalace.decadal.range[0]}~${decPalace.decadal.range[1]}歲大限盤` : "大限盤"}】`
+        : "【本命全景盤】";
+    topMeta.textContent = `姓名：${meta.nickname}　${yinYangGender}　${chart.fiveElementsClass}　${scopeTag}`;
 
     const infoLines = document.createElement("div");
     infoLines.className = "zw-center-lines";
-    [
+    const lines = [
       `國曆：${chart.solarDate}（${chart.time} ${chart.timeRange}）`,
       `農曆：${chart.lunarDate}`,
       `命主：${chart.soul}　身主：${chart.body}　生肖：${chart.zodiac}`
-    ].forEach((txt) => {
+    ];
+    if (currentScope === "yearly" && yr) {
+      lines.push(
+        `流年干支：${currentTargetYear} ${yr.heavenlyStem}${yr.earthlyBranch}年 · 流年命宮在【${yr.earthlyBranch}】`
+      );
+    } else if (currentScope === "decadal" && decPalace) {
+      lines.push(
+        `目前大限：${decPalace.decadal.range[0]}~${decPalace.decadal.range[1]} 歲（大限命宮在【${decPalace.earthlyBranch} · ${decPalace.name}】）`
+      );
+    }
+
+    lines.forEach((txt) => {
       const p = document.createElement("p");
       p.textContent = txt;
       infoLines.appendChild(p);
@@ -316,12 +427,21 @@ export function initZiwei(showToast) {
 
     const legend = document.createElement("div");
     legend.className = "zw-sihua-legend";
-    legend.innerHTML =
-      '<span>四化圖示：</span>' +
-      '<span class="zw-mutagen-box mutagen--lu">祿</span>' +
-      '<span class="zw-mutagen-box mutagen--quan">權</span>' +
-      '<span class="zw-mutagen-box mutagen--ke">科</span>' +
-      '<span class="zw-mutagen-box mutagen--ji">忌</span>';
+    if (currentScope === "yearly" && yr?.mutagen) {
+      legend.innerHTML =
+        `<span>${yr.heavenlyStem}干流年四化：</span>` +
+        `<span class="zw-mutagen-box mutagen--lu">祿</span>${yr.mutagen[0] || ""} ` +
+        `<span class="zw-mutagen-box mutagen--quan">權</span>${yr.mutagen[1] || ""} ` +
+        `<span class="zw-mutagen-box mutagen--ke">科</span>${yr.mutagen[2] || ""} ` +
+        `<span class="zw-mutagen-box mutagen--ji">忌</span>${yr.mutagen[3] || ""}`;
+    } else {
+      legend.innerHTML =
+        '<span>四化圖示：</span>' +
+        '<span class="zw-mutagen-box mutagen--lu">祿</span>' +
+        '<span class="zw-mutagen-box mutagen--quan">權</span>' +
+        '<span class="zw-mutagen-box mutagen--ke">科</span>' +
+        '<span class="zw-mutagen-box mutagen--ji">忌</span>';
+    }
 
     const focusBox = document.createElement("p");
     focusBox.className = "zw-center-focus";
@@ -332,10 +452,16 @@ export function initZiwei(showToast) {
     astrolabeEl.appendChild(center);
 
     // 12 Palaces
-    let soulBranch = null;
-    chart.palaces.forEach((palace) => {
-      if (palace.name === "命宮") {
-        soulBranch = palace.earthlyBranch;
+    let initialFocusBranch = null;
+
+    chart.palaces.forEach((palace, pIndex) => {
+      // Determine initial focus branch
+      if (currentScope === "yearly" && yr?.earthlyBranch === palace.earthlyBranch) {
+        initialFocusBranch = palace.earthlyBranch;
+      } else if (currentScope === "decadal" && decPalace?.earthlyBranch === palace.earthlyBranch) {
+        initialFocusBranch = palace.earthlyBranch;
+      } else if (currentScope === "origin" && palace.name === "命宮") {
+        initialFocusBranch = palace.earthlyBranch;
       }
 
       const cell = document.createElement("article");
@@ -352,11 +478,17 @@ export function initZiwei(showToast) {
       const starsRow = document.createElement("div");
       starsRow.className = "zw-stars-cols";
 
-      palace.majorStars.forEach((s) => starsRow.appendChild(createStarColumn(s, "major")));
-      palace.minorStars.forEach((s) => starsRow.appendChild(createStarColumn(s, "minor")));
+      palace.majorStars.forEach((s) => {
+        const yrMut = currentScope === "yearly" ? yearlyMutagenMap.get(s.name) : null;
+        starsRow.appendChild(createStarColumn(s, "major", { yearlyMutagen: yrMut }));
+      });
+      palace.minorStars.forEach((s) => {
+        const yrMut = currentScope === "yearly" ? yearlyMutagenMap.get(s.name) : null;
+        starsRow.appendChild(createStarColumn(s, "minor", { yearlyMutagen: yrMut }));
+      });
       palace.adjectiveStars.slice(0, 4).forEach((s) => starsRow.appendChild(createStarColumn(s, "adj")));
 
-      // Middle: 小限 ages
+      // Middle: 小限 ages + scope badge
       const agesRow = document.createElement("div");
       agesRow.className = "zw-ages-row";
       if (palace.ages?.length) {
@@ -378,7 +510,7 @@ export function initZiwei(showToast) {
           godsLeft.appendChild(s);
         });
 
-      // Bottom-center: 大限 + 紅底宮位名
+      // Bottom-center: 大限 + 宮位名標籤（本命 + 流年/大限標記）
       const centerBot = document.createElement("div");
       centerBot.className = "zw-bot-center";
 
@@ -401,6 +533,25 @@ export function initZiwei(showToast) {
         bodyTag.className = "zw-body-badge";
         bodyTag.textContent = "身宮";
         badgesWrap.appendChild(bodyTag);
+      }
+
+      // Scope badges (流年宮名 / 大限宮名)
+      if (currentScope === "yearly" && yr?.palaceNames) {
+        const yrName = yr.palaceNames[pIndex];
+        if (yrName) {
+          const yrTag = document.createElement("span");
+          yrTag.className = `zw-scope-badge zw-scope-badge--yearly ${yrName === "命宮" ? "is-scope-life" : ""}`;
+          yrTag.textContent = `流${shortPalaceName(yrName)}`;
+          badgesWrap.appendChild(yrTag);
+        }
+      } else if (currentScope === "decadal" && dec?.palaceNames) {
+        const decName = dec.palaceNames[pIndex];
+        if (decName) {
+          const decTag = document.createElement("span");
+          decTag.className = `zw-scope-badge zw-scope-badge--decadal ${decName === "命宮" ? "is-scope-life" : ""}`;
+          decTag.textContent = `限${shortPalaceName(decName)}`;
+          badgesWrap.appendChild(decTag);
+        }
       }
 
       centerBot.append(decadal, badgesWrap);
@@ -438,9 +589,39 @@ export function initZiwei(showToast) {
       astrolabeEl.appendChild(cell);
     });
 
-    if (soulBranch) {
-      highlightSanfang(soulBranch);
+    if (initialFocusBranch) {
+      highlightSanfang(initialFocusBranch);
     }
+  }
+
+  function renderAll() {
+    if (!currentChart || !currentMeta) return;
+
+    // Update button labels with actual context
+    const age = getCurrentNominalAge(currentChart, currentTargetYear);
+    const activeDec = age !== null
+      ? currentChart.palaces.find((p) => p.decadal?.range && age >= p.decadal.range[0] && age <= p.decadal.range[1])
+      : null;
+
+    if (activeDec) {
+      decadalBtnLabel.textContent = `大限盤 (${activeDec.decadal.range[0]}~${activeDec.decadal.range[1]}歲)`;
+    } else {
+      decadalBtnLabel.textContent = "大限盤";
+    }
+
+    const yr = currentHoroscope?.yearly;
+    if (yr) {
+      yearlyBtnLabel.textContent = `流年盤 (${currentTargetYear} ${yr.heavenlyStem}${yr.earthlyBranch})`;
+    } else {
+      yearlyBtnLabel.textContent = `流年盤 (${currentTargetYear})`;
+    }
+
+    renderChart(currentChart, currentMeta);
+    renderZiweiReading(readingContentEl, currentChart, currentMeta, {
+      scope: currentScope,
+      targetYear: currentTargetYear,
+      horoscope: currentHoroscope
+    });
   }
 
   form.addEventListener("submit", (e) => {
@@ -471,8 +652,8 @@ export function initZiwei(showToast) {
 
       currentChart = chart;
       currentMeta = { nickname, gender, calendar };
-      renderChart(chart, currentMeta);
-      renderZiweiReading(readingContentEl, chart, currentMeta);
+      updateHoroscope();
+      renderAll();
 
       chartStage.hidden = false;
       downloadButton.hidden = false;
@@ -501,7 +682,8 @@ export function initZiwei(showToast) {
         useCORS: true
       });
       const link = document.createElement("a");
-      link.download = `${currentMeta.nickname}-紫微命盤.png`;
+      const scopeSuffix = currentScope === "yearly" ? `-${currentTargetYear}流年` : currentScope === "decadal" ? "-大限" : "";
+      link.download = `${currentMeta.nickname}-紫微命盤${scopeSuffix}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
       showToast?.("已下載紫微命盤圖檔");
@@ -516,10 +698,14 @@ export function initZiwei(showToast) {
 
   copyAiPromptButton?.addEventListener("click", async () => {
     if (!currentChart || !currentMeta) return;
-    const promptText = buildZiweiAiPrompt(currentChart, currentMeta);
+    const promptText = buildZiweiAiPrompt(currentChart, currentMeta, {
+      scope: currentScope,
+      targetYear: currentTargetYear,
+      horoscope: currentHoroscope
+    });
     try {
       await navigator.clipboard.writeText(promptText);
-      showToast?.("已複製 AI 深度解盤指令，可直接貼給 ChatGPT / Gemini");
+      showToast?.(`已複製 ${currentScope === "yearly" ? `${currentTargetYear} 流年` : ""} AI 深度解盤指令`);
     } catch {
       showToast?.("無法自動複製，請確認瀏覽器剪貼簿權限");
     }
@@ -527,21 +713,27 @@ export function initZiwei(showToast) {
 
   copyButton.addEventListener("click", async () => {
     if (!currentChart || !currentMeta) return;
+    const yr = currentHoroscope?.yearly;
     const lines = [
-      `【${currentMeta.nickname}｜紫微斗數命盤】`,
+      `【${currentMeta.nickname}｜紫微斗數命盤（${currentScope === "yearly" ? `${currentTargetYear} 流年` : currentScope === "decadal" ? "大限" : "本命"}）】`,
       `性別：${currentMeta.gender}命（屬${currentChart.zodiac}）`,
       `國曆：${currentChart.solarDate}｜農曆：${currentChart.lunarDate}`,
       `八字：${currentChart.chineseDate}｜時辰：${currentChart.time}`,
       `格局：${currentChart.fiveElementsClass}｜命主：${currentChart.soul}｜身主：${currentChart.body}`,
+      yr ? `流年：${currentTargetYear}（${yr.heavenlyStem}${yr.earthlyBranch}年）｜流年命宮在【${yr.earthlyBranch}】｜流年四化：${yr.mutagen?.join("、")}` : "",
       ""
-    ];
+    ].filter(Boolean);
 
-    currentChart.palaces.forEach((p) => {
+    currentChart.palaces.forEach((p, idx) => {
       const majors = p.majorStars.length
         ? p.majorStars.map((s) => `${s.name}${s.brightness || ""}${s.mutagen ? `(化${s.mutagen})` : ""}`).join("、")
         : "空宮";
       const minors = p.minorStars.map((s) => s.name).join("、");
-      const tags = [p.isBodyPalace ? "身宮" : "", p.isOriginalPalace ? "來因宮" : ""].filter(Boolean).join("/");
+      const tags = [
+        p.isBodyPalace ? "身宮" : "",
+        p.isOriginalPalace ? "來因宮" : "",
+        currentScope === "yearly" && yr?.palaceNames ? `流${yr.palaceNames[idx]}` : ""
+      ].filter(Boolean).join("/");
       lines.push(
         `■ ${p.name}（${p.heavenlyStem}${p.earthlyBranch}${tags ? `·${tags}` : ""}）：主星[${majors}]${minors ? `｜輔星[${minors}]` : ""}`
       );

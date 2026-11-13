@@ -168,10 +168,17 @@ navTabs.forEach((tab) => {
 function updateDrawButtonText() {
   const mode = modeInput.value;
   const isManual = drawMethodInput.value === "manual";
+  const countText = {
+    daily: "1 張今日指引",
+    compare: "三選項 9 張牌",
+    five: "5 張牌",
+    nine: "九宮格 9 張牌"
+  }[mode] || "牌卡";
+
   if (isManual) {
-    drawButton.textContent = mode === "daily" ? "展開牌桌親選今日指引" : "展開牌桌親自選牌";
+    drawButton.textContent = `展開牌桌親選 ${countText}`;
   } else {
-    drawButton.textContent = mode === "daily" ? "直覺快抽今日指引" : "開始直覺快抽";
+    drawButton.textContent = `直覺快抽 ${countText}`;
   }
 }
 
@@ -183,6 +190,13 @@ function setMode(mode) {
     pill.setAttribute("aria-pressed", String(active));
   });
   optionsContainer.hidden = mode !== "compare";
+
+  // If a manual picking session was open for another mode, reset it cleanly
+  if (manualSession && manualSession.mode !== mode) {
+    manualSession = null;
+    manualTableStage.hidden = true;
+  }
+
   updateDrawButtonText();
 }
 
@@ -1091,5 +1105,5 @@ updateHistoryBadge();
 renderLibrary();
 initZiwei(showToast);
 if (!tryLoadFromUrl()) {
-  setMode("compare");
+  setMode("five");
 }

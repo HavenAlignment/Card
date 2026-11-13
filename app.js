@@ -31,6 +31,16 @@ const optionInputs = [
 const drawButton = document.getElementById("drawButton");
 const clearButton = document.getElementById("clearButton");
 
+const drawMethodInput = document.getElementById("drawMethod");
+const drawMethodPills = document.querySelectorAll(".draw-method-pill");
+const manualTableStage = document.getElementById("manualTableStage");
+const manualTargetHint = document.getElementById("manualTargetHint");
+const manualSelectedCount = document.getElementById("manualSelectedCount");
+const manualSlotsList = document.getElementById("manualSlotsList");
+const manualFanDeck = document.getElementById("manualFanDeck");
+const autoCompleteDrawBtn = document.getElementById("autoCompleteDrawBtn");
+const cancelManualDrawBtn = document.getElementById("cancelManualDrawBtn");
+
 const resultToolbar = document.getElementById("resultToolbar");
 const questionResult = document.getElementById("questionResult");
 const revealAllButton = document.getElementById("revealAllButton");
@@ -155,6 +165,16 @@ navTabs.forEach((tab) => {
 
 // --- Mode Selection ---
 
+function updateDrawButtonText() {
+  const mode = modeInput.value;
+  const isManual = drawMethodInput.value === "manual";
+  if (isManual) {
+    drawButton.textContent = mode === "daily" ? "展開牌桌親選今日指引" : "展開牌桌親自選牌";
+  } else {
+    drawButton.textContent = mode === "daily" ? "直覺快抽今日指引" : "開始直覺快抽";
+  }
+}
+
 function setMode(mode) {
   modeInput.value = mode;
   modePills.forEach((pill) => {
@@ -163,8 +183,22 @@ function setMode(mode) {
     pill.setAttribute("aria-pressed", String(active));
   });
   optionsContainer.hidden = mode !== "compare";
-  drawButton.textContent = mode === "daily" ? "抽取今日指引" : "開始抽牌";
+  updateDrawButtonText();
 }
+
+function setDrawMethod(method) {
+  drawMethodInput.value = method;
+  drawMethodPills.forEach((p) => {
+    const active = p.dataset.method === method;
+    p.classList.toggle("is-active", active);
+    p.setAttribute("aria-pressed", String(active));
+  });
+  updateDrawButtonText();
+}
+
+drawMethodPills.forEach((pill) => {
+  pill.addEventListener("click", () => setDrawMethod(pill.dataset.method));
+});
 
 modePills.forEach((pill) => {
   pill.addEventListener("click", () => setMode(pill.dataset.mode));
@@ -428,9 +462,269 @@ function renderReading(reading, { startFlipped = false } = {}) {
   updateRevealAllButton();
 }
 
+// --- Interactive Manual Fan Selection Engine ---
+
+let manualSession = null;
+
+function computeSpreadsConfig(mode) {
+  const spreads = [];
+  if (mode === "daily") {
+    const today = new Intl.DateTimeFormat("zh-Hant", {
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    }).format(new Date());
+    spreads.push({
+      title: `每日一牌｜${today}`,
+      count: 1,
+      positions: SPREAD_POSITIONS.daily
+    });
+  } else if (mode === "compare") {
+    const rawOptions = optionInputs.map((input) => input.value.trim());
+    const hasAnyCustom = rawOptions.some(Boolean);
+    const activeIndices = hasAnyCustom
+      ? rawOptions
+          .map((val, i) => (val || i < 2 ? i : -1))
+          .filter((i) => i !== -1)
+      : [0, 1, 2];
+
+    activeIndices.forEach((origIdx) => {
+      const title = rawOptions[origIdx] || `情境 ${origIdx + 1}`;
+      spreads.push({
+        title,
+        count: 3,
+        positions: SPREAD_POSITIONS.compare
+      });
+    });
+  } else if (mode === "five") {
+    spreads.push({
+      title: "單一問題｜五張牌陣",
+      count: 5,
+      positions: SPREAD_POSITIONS.five
+    });
+  } else if (mode === "nine") {
+    spreads.push({
+      title: "九宮格｜3×3 深度全景",
+      count: 9,
+      positions: SPREAD_POSITIONS.nine
+    });
+  }
+  return spreads;
+}
+
+function startManualDraw() {
+  const mode = modeInput.value;
+  const question = questionInput.value.trim();
+  const spreadsConfig = computeSpreadsConfig(mode);
+
+  // Flatten slots so we know the order of picking
+  const targetSlots = [];
+  spreadsConfig.forEach((sc, spIdx) => {
+    sc.positions.forEach((pos, pIdx) => {
+      targetSlots.push({
+        spreadIndex: spIdx,
+        spreadTitle: sc.title,
+        posIndex: pIdx,
+        posName: pos.name,
+        posPrompt: pos.prompt,
+        cardNumber: null
+      });
+    });
+  });
+
+  // Prepare a randomized secret mapping for the 36 face-down cards
+  const secretDeck = [...DECK];
+  for (let i = secretDeck.length - 1; i > 0; i--) {
+    const j = getRandomInt(i + 1);
+    [secretDeck[i], secretDeck[j]] = [secretDeck[j], secretDeck[i]];
+  }
+
+  manualSession = {
+    mode,
+    question,
+    spreadsConfig,
+    targetSlots,
+    pickedCardNumbers: [],
+    secretDeck
+  };
+
+  renderManualStage();
+  manualTableStage.hidden = false;
+  resultsContainer.replaceChildren();
+  resultToolbar.hidden = true;
+  manualTableStage.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function renderManualStage() {
+  if (!manualSession) return;
+  const { targetSlots, pickedCardNumbers, secretDeck } = manualSession;
+  const nextSlotIndex = pickedCardNumbers.length;
+  const totalNeeded = targetSlots.length;
+
+  manualSelectedCount.textContent = `已選 ${nextSlotIndex} / ${totalNeeded} 張`;
+
+  if (nextSlotIndex < totalNeeded) {
+    const nextSlot = targetSlots[nextSlotIndex];
+    manualTargetHint.textContent = `請依直覺選擇第 ${nextSlotIndex + 1} 張：【${nextSlot.spreadTitle} · ${nextSlot.posName}】`;
+  } else {
+    manualTargetHint.textContent = "✦ 牌卡已全數挑選完成！正在展開解讀…";
+  }
+
+  // Render Target Slots Preview
+  manualSlotsList.replaceChildren();
+  targetSlots.forEach((slot, idx) => {
+    const pill = document.createElement("div");
+    pill.className = "manual-slot-pill";
+    if (idx === nextSlotIndex) pill.classList.add("is-current");
+    if (slot.cardNumber) pill.classList.add("is-filled");
+
+    const label = document.createElement("span");
+    label.className = "manual-slot-name";
+    label.textContent = `${slot.spreadTitle ? `${slot.spreadTitle} · ` : ""}${slot.posName}`;
+
+    const val = document.createElement("span");
+    val.className = "manual-slot-val";
+    if (slot.cardNumber) {
+      const card = DECK.find((c) => c.number === slot.cardNumber);
+      val.textContent = card ? `✓ ${card.name}` : "✓ 已選";
+    } else {
+      val.textContent = idx === nextSlotIndex ? "等待挑選…" : "—";
+    }
+
+    pill.append(label, val);
+    manualSlotsList.appendChild(pill);
+  });
+
+  // Render 36 Fan Deck Cards
+  manualFanDeck.replaceChildren();
+  secretDeck.forEach((card, deckIdx) => {
+    const isPicked = pickedCardNumbers.includes(card.number);
+    const cardEl = document.createElement("div");
+    cardEl.className = "manual-card-back";
+    if (isPicked) cardEl.classList.add("is-picked");
+
+    // Circular Fan Angle & Offset calculation (-55deg to +55deg)
+    const normalized = (deckIdx - 17.5) / 17.5; // -1 .. +1
+    const angle = normalized * 52;
+    const translateY = Math.abs(normalized) * 22;
+    const rotate = angle;
+    cardEl.style.setProperty("--fan-rot", `${rotate}deg`);
+    cardEl.style.setProperty("--fan-ty", `${translateY}px`);
+    cardEl.style.setProperty("--fan-z", deckIdx + 1);
+
+    const inner = document.createElement("div");
+    inner.className = "manual-card-inner";
+    const emblem = document.createElement("span");
+    emblem.className = "manual-card-emblem";
+    emblem.textContent = "✦";
+    inner.appendChild(emblem);
+    cardEl.appendChild(inner);
+
+    if (!isPicked) {
+      cardEl.setAttribute("role", "button");
+      cardEl.setAttribute("tabindex", "0");
+      cardEl.setAttribute("aria-label", `挑選此張牌（第 ${deckIdx + 1} 張）`);
+
+      const selectCard = () => pickManualCard(card.number);
+      cardEl.addEventListener("click", selectCard);
+      cardEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          selectCard();
+        }
+      });
+    }
+
+    manualFanDeck.appendChild(cardEl);
+  });
+}
+
+function pickManualCard(cardNumber) {
+  if (!manualSession) return;
+  const { targetSlots, pickedCardNumbers } = manualSession;
+  if (pickedCardNumbers.length >= targetSlots.length) return;
+
+  const currentSlot = targetSlots[pickedCardNumbers.length];
+  currentSlot.cardNumber = cardNumber;
+  pickedCardNumbers.push(cardNumber);
+
+  renderManualStage();
+
+  if (pickedCardNumbers.length >= targetSlots.length) {
+    setTimeout(() => {
+      finalizeManualDraw();
+    }, 550);
+  }
+}
+
+function finalizeManualDraw() {
+  if (!manualSession) return;
+  const { mode, question, spreadsConfig, pickedCardNumbers } = manualSession;
+
+  let offset = 0;
+  const spreads = spreadsConfig.map((sc) => {
+    const cardNumbers = pickedCardNumbers.slice(offset, offset + sc.count);
+    offset += sc.count;
+    return {
+      title: sc.title,
+      cardNumbers
+    };
+  });
+
+  const reading = {
+    id: `${Date.now()}-${getRandomInt(10000)}`,
+    createdAt: new Date().toISOString(),
+    mode,
+    question,
+    options: mode === "compare" ? optionInputs.map((i) => i.value.trim()) : [],
+    spreads
+  };
+
+  manualTableStage.hidden = true;
+  manualSession = null;
+
+  renderReading(reading, { startFlipped: false });
+  saveToHistory(reading);
+  resultToolbar.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  showToast("牌卡已挑選入座，請逐張翻牌揭曉解讀");
+}
+
+autoCompleteDrawBtn.addEventListener("click", () => {
+  if (!manualSession) return;
+  const { targetSlots, pickedCardNumbers, secretDeck } = manualSession;
+  const remaining = secretDeck
+    .map((c) => c.number)
+    .filter((n) => !pickedCardNumbers.includes(n));
+
+  while (pickedCardNumbers.length < targetSlots.length && remaining.length > 0) {
+    const pick = remaining.shift();
+    const slot = targetSlots[pickedCardNumbers.length];
+    slot.cardNumber = pick;
+    pickedCardNumbers.push(pick);
+  }
+
+  renderManualStage();
+  setTimeout(() => {
+    finalizeManualDraw();
+  }, 400);
+});
+
+cancelManualDrawBtn.addEventListener("click", () => {
+  manualSession = null;
+  manualTableStage.hidden = true;
+  showToast("已取消手動選牌");
+});
+
 // --- Actions: Draw, Reveal, Copy, Share ---
 
 function executeDraw() {
+  const isManual = drawMethodInput.value === "manual";
+  if (isManual) {
+    startManualDraw();
+    return;
+  }
+
+  // Auto quick draw
   const mode = modeInput.value;
   const question = questionInput.value.trim();
   const spreads = [];

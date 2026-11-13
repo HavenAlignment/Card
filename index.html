@@ -102,11 +102,47 @@
               </label>
             </div>
 
+            <div class="field-group">
+              <span class="field-label">抽牌方式</span>
+              <div class="draw-method-pills" role="radiogroup" aria-label="抽牌方式">
+                <button class="draw-method-pill is-active" type="button" data-method="manual" aria-pressed="true">
+                  <span>親自選牌（扇形牌桌）</span>
+                </button>
+                <button class="draw-method-pill" type="button" data-method="auto" aria-pressed="false">
+                  <span>直覺快抽（自動洗牌）</span>
+                </button>
+              </div>
+              <input id="drawMethod" type="hidden" value="manual" />
+            </div>
+
             <div class="form-actions">
-              <button id="drawButton" class="btn-primary" type="submit">開始抽牌</button>
+              <button id="drawButton" class="btn-primary" type="submit">展開牌桌挑牌</button>
               <button id="clearButton" class="btn-ghost" type="button" hidden>清空桌面</button>
             </div>
           </form>
+
+          <!-- Interactive Manual Selection Stage -->
+          <div id="manualTableStage" class="manual-table-stage" hidden>
+            <div class="manual-table-header">
+              <div class="manual-table-info">
+                <span class="manual-table-title">✦ 扇形牌桌 · 請依直覺親自挑選牌卡</span>
+                <span id="manualTargetHint" class="manual-table-hint">請為【情境一】選擇第 1 張牌</span>
+              </div>
+              <div class="manual-table-actions">
+                <span id="manualSelectedCount" class="manual-count-pill">已選 0 / 9 張</span>
+                <button id="autoCompleteDrawBtn" class="btn-secondary" type="button">隨機補齊剩餘</button>
+                <button id="cancelManualDrawBtn" class="btn-ghost" type="button">取消</button>
+              </div>
+            </div>
+
+            <div class="manual-slots-preview">
+              <div id="manualSlotsList" class="manual-slots-list"></div>
+            </div>
+
+            <div class="manual-fan-wrapper">
+              <div id="manualFanDeck" class="manual-fan-deck" aria-label="扇形展開牌堆"></div>
+            </div>
+          </div>
 
           <div id="resultToolbar" class="result-toolbar" hidden>
             <p id="questionResult" class="question-result" aria-live="polite"></p>
